@@ -6,5 +6,7 @@
     <string name="title_section2">Section 2</string>
     <string name="title_sectionDebug">Debug</string>
     <string name="baseURL">http://anilist.co</string>
-
+    <color name="Black">#000000</color>
+    <color name="ExpandChildBackground">#FFAFABAB</color>
+    <color name="ExpandGroupBackground">#FF7C7C7C</color>
 </resources>

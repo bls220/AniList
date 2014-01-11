@@ -41,12 +41,32 @@
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <Button
+        android:id="@+id/btnAnimeList"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/editOutput"
+        android:layout_toRightOf="@+id/btnLoginTest"
+        android:text="Anime\nList" />
+
+    <Button
         android:id="@+id/btnLoginTest"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/editOutput"
-        android:layout_toRightOf="@+id/btnClear"
+        android:layout_toRightOf="@+id/btnBasicTest"
         android:text="Login" />
+
+    <ExpandableListView
+        android:id="@+id/animeListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/btnClear"
+        android:background="@drawable/text_border"
+        android:padding="1dip" >
+
+    </ExpandableListView>
 
 </RelativeLayout>
