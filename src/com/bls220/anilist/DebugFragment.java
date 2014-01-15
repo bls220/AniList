@@ -18,6 +18,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +31,7 @@ import com.bls220.anilist.HtmlHelperTask.TaskResults;
  * @author bsmith
  * 
  */
-public class DebugFragment extends Fragment {
+public class DebugFragment extends Fragment implements OnChildClickListener {
 
 	TextView editOutput;
 	AnimeListAdapter animeListAdapter;
@@ -57,8 +58,9 @@ public class DebugFragment extends Fragment {
 
 		ExpandableListView animeList = (ExpandableListView) rootView.findViewById(R.id.animeListView);
 		animeListAdapter = new AnimeListAdapter(getActivity());
-		animeListAdapter.addItem(new ExpandListChild("Dummy Child"), new ExpandListGroup("Dummy Group"));
+		animeListAdapter.addItem(new ExpandListChild("Dummy Child", -1), new ExpandListGroup("Dummy Group"));
 		animeList.setAdapter(animeListAdapter);
+		animeList.setOnChildClickListener(this);
 
 		return rootView;
 	}
@@ -96,10 +98,12 @@ public class DebugFragment extends Fragment {
 	private class AnimeListTestClickListener implements OnClickListener, OnTaskCompleteListener {
 		@Override
 		public void onClick(View v) {
-			Toast.makeText(getActivity(), "Anime List Test", Toast.LENGTH_SHORT).show();
+			MainActivity activity = (MainActivity) getActivity();
+			Toast.makeText(activity, "Anime List Test", Toast.LENGTH_SHORT).show();
 			// Fetch anime page
-			// TODO: acquire User_ID
-			((MainActivity) getActivity()).requestPage("/animelist/11631/SubHobo", false, null, this);
+			// Set userID for debug
+			activity.userID = 11631;
+			activity.requestPage("/animelist/" + activity.userID, false, null, this);
 		}
 
 		@Override
@@ -133,18 +137,37 @@ public class DebugFragment extends Fragment {
 					// Get Score
 					String score = entry.select("[class~=^cscr]").text();
 					// Get Progress
-					String progress = "";
-					progress = entry.select(".plus").get(0).parent().text();
+					String[] progress = entry.select(".plus").get(0).parent().text().replace("+", "").trim().split("/");
+					if (progress[0].isEmpty()) {
+						progress[0] = "-1";
+					}
+					Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
+					Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
 
-					animeListAdapter
-							.addItem(
-									new ExpandListChild(String.format("%s (%s)    %s    %s", name, id, score, progress)),
-									group);
+					animeListAdapter.addItem(
+							new ExpandListChild(String.format("%s (%s)", name, id), Integer.parseInt(id), score, curEp,
+									totEp), group);
 				}
 			}
 
 			animeListAdapter.notifyDataSetChanged();
 			Toast.makeText(getActivity(), "Anime List Test Complete", Toast.LENGTH_SHORT).show();
 		}
+	}
+
+	@Override
+	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+		ExpandListChild child = (ExpandListChild) v.getTag();
+		Toast.makeText(v.getContext(),
+				String.format("%s %s %s", child.getName(), child.getScore(), child.getEpisodeProgress()),
+				Toast.LENGTH_SHORT).show();
+		// Show update Dialog
+		UpdateDialogFragment dialog = new UpdateDialogFragment();
+		// get episode info from child
+		dialog.setMaxEpisodes(child.getMaxEpisode());
+		dialog.setEpisode(child.getEpisode());
+		dialog.setAnimeID(child.getAnimeID());
+		dialog.show(getFragmentManager(), "update");
+		return true;
 	}
 }

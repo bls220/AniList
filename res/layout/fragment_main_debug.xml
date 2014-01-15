@@ -34,7 +34,6 @@
         android:layout_alignParentRight="true"
         android:layout_below="@+id/btnBasicTest"
         android:background="@drawable/text_border"
-        android:ems="10"
         android:maxLines="10"
         android:scrollHorizontally="true"
         android:scrollbars="horizontal|vertical"
@@ -64,9 +63,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/btnClear"
-        android:background="@drawable/text_border"
-        android:padding="1dip" >
-
-    </ExpandableListView>
+        android:padding="1dip"
+        tools:listitem="@layout/expandlist_group_item" />
 
 </RelativeLayout>

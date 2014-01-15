@@ -66,15 +66,21 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 
 	@Override
 	public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View view, ViewGroup parent) {
-		ExpandListChild child = (ExpandListChild) getChild(groupPosition, childPosition);
+		final ExpandListChild child = (ExpandListChild) getChild(groupPosition, childPosition);
 		if (view == null) {
-			LayoutInflater infalInflater = (LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
+			LayoutInflater infalInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			view = infalInflater.inflate(R.layout.expandlist_child_item, null);
 		}
-		TextView tv = (TextView) view.findViewById(R.id.tvChild);
-		tv.setText(child.getName().toString());
-		tv.setTag(child.getTag());
-		// TODO Auto-generated method stub
+		TextView tv = (TextView) view.findViewById(R.id.tvName);
+		tv.setText(child.getName());
+
+		tv = (TextView) view.findViewById(R.id.tvScore);
+		tv.setText(child.getScore());
+
+		tv = (TextView) view.findViewById(R.id.tvEpisodes);
+		tv.setText(child.getEpisodeProgress());
+
+		view.setTag(child);
 		return view;
 	}
 
@@ -109,7 +115,7 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 	public View getGroupView(int groupPosition, boolean isLastChild, View view, ViewGroup parent) {
 		ExpandListGroup group = (ExpandListGroup) getGroup(groupPosition);
 		if (view == null) {
-			LayoutInflater inf = (LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
+			LayoutInflater inf = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			view = inf.inflate(R.layout.expandlist_group_item, null);
 		}
 		TextView tv = (TextView) view.findViewById(R.id.tvGroup);
@@ -132,30 +138,105 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 
 	public static class ExpandListChild {
 
-		private String Name;
-		private String Tag;
+		private String mName;
+		private String mScore;
+		private Integer mEpisode;
+		private Integer mMaxEpisodes;
+		private Integer mAnimeID;
 
 		public ExpandListChild() {
 		}
 
-		public ExpandListChild(String name) {
-			this.Name = name;
+		public ExpandListChild(String name, Integer animeID, String score, Integer episode, Integer maxEpisodes) {
+			setName(name);
+			setScore(score);
+			setEpisode(episode);
+			setMaxEpisode(maxEpisodes);
+			setAnimeID(animeID);
 		}
 
+		public ExpandListChild(String name, Integer animeID) {
+			this(name, animeID, "-", 0, 0);
+		}
+
+		/**
+		 * @return the name
+		 */
 		public String getName() {
-			return Name;
+			return mName;
 		}
 
-		public void setName(String Name) {
-			this.Name = Name;
+		/**
+		 * @param name
+		 *            - The name to be set
+		 */
+		public void setName(String name) {
+			mName = name;
 		}
 
-		public String getTag() {
-			return Tag;
+		/**
+		 * @return the score
+		 */
+		public String getScore() {
+			return mScore;
 		}
 
-		public void setTag(String Tag) {
-			this.Tag = Tag;
+		/**
+		 * @param score
+		 *            - the score to set
+		 */
+		public void setScore(String score) {
+			mScore = score;
+		}
+
+		/**
+		 * @return the progress by episode
+		 */
+		public String getEpisodeProgress() {
+			String str = "";
+			if (mEpisode < 0) {
+				if (mMaxEpisodes >= 0) {
+					str = String.valueOf(mMaxEpisodes);
+				}
+			} else {
+				str = String.format("%d/%d", mEpisode, mMaxEpisodes);
+			}
+			return str;
+		}
+
+		/**
+		 * @param episodes
+		 *            - the episodes to set
+		 */
+		public void setEpisode(Integer episode) {
+			mEpisode = episode;
+		}
+
+		public Integer getEpisode() {
+			return mEpisode;
+		}
+
+		public void setMaxEpisode(Integer maxEpisodes) {
+			mMaxEpisodes = maxEpisodes;
+		}
+
+		public Integer getMaxEpisode() {
+			return mMaxEpisodes;
+		}
+
+		/**
+		 * @return the AnimeID
+		 */
+		public Integer getAnimeID() {
+			return mAnimeID;
+		}
+
+		/**
+		 * @param AnimeID
+		 *            the AnimeID to set
+		 */
+		public void setAnimeID(Integer animeID) {
+			mAnimeID = animeID;
 		}
 	}
 

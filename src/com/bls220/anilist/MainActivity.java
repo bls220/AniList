@@ -7,11 +7,12 @@ import java.util.Locale;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -21,7 +22,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,8 +29,10 @@ import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
+import com.bls220.anilist.UpdateDialogFragment.UpdateDialogListener;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener, LoginDialogListener {
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener, LoginDialogListener,
+		UpdateDialogListener {
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the sections. We use a
@@ -44,6 +46,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * The {@link ViewPager} that will host the section contents.
 	 */
 	ViewPager mViewPager;
+
+	Integer userID = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -185,12 +189,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	@Override
-	public void onDialogPositiveClick(DialogFragment dialog) {
-		String username = ((EditText) dialog.getDialog().findViewById(R.id.editUsername)).getText().toString();
-		String password = ((EditText) dialog.getDialog().findViewById(R.id.editPassword)).getText().toString();
+	public void onLoginDialogPositiveClick(LoginDialogFragment dialog) {
 		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>(3);
-		params.add(new BasicNameValuePair("username", username));
-		params.add(new BasicNameValuePair("password", password));
+		params.add(new BasicNameValuePair("username", dialog.getUsername()));
+		params.add(new BasicNameValuePair("password", dialog.getPassword()));
 		params.add(new BasicNameValuePair("remember_me", "1"));
 		OnTaskCompleteListener loginListener = new OnTaskCompleteListener() {
 			@Override
@@ -201,11 +203,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 							MainActivity.this,
 							String.format("Error: [%d] %s", results.status.getStatusCode(),
 									results.status.getReasonPhrase()), Toast.LENGTH_LONG).show();
+					return;
 				}
 				TextView editOutput = ((TextView) findViewById(R.id.editOutput));
 				if (editOutput != null) {
-					editOutput.append(results.output);
-					Toast.makeText(MainActivity.this, "Login Test Comlplete", Toast.LENGTH_SHORT).show();
+					Document doc = Jsoup.parse(results.output);
+					userID = Integer.parseInt(doc.select("a[href~=^/user/").attr("href").substring(6));
+					editOutput.append(userID.toString());
+					Toast.makeText(MainActivity.this, "Login Test Complete", Toast.LENGTH_SHORT).show();
 				}
 			}
 		};
@@ -213,8 +218,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	@Override
-	public void onDialogNegativeClick(DialogFragment dialog) {
-		dialog.getDialog().cancel();
+	public void onUpdateDialogPositiveClick(UpdateDialogFragment dialog) {
+		List<NameValuePair> paramPairs = new ArrayList<NameValuePair>(4);
+		paramPairs.add(new BasicNameValuePair("updateVar", dialog.getEpisode().toString()));
+		paramPairs.add(new BasicNameValuePair("anime_id", dialog.getAnimeID().toString()));
+		paramPairs.add(new BasicNameValuePair("utype", "ep_watched"));
+		paramPairs.add(new BasicNameValuePair("dur", "24"));
+		requestPage("/update_anime.php", true, paramPairs, null);
 	}
-
 }
