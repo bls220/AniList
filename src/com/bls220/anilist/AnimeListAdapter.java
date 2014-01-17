@@ -75,7 +75,7 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 		tv.setText(child.getName());
 
 		tv = (TextView) view.findViewById(R.id.tvScore);
-		tv.setText(child.getScore());
+		tv.setText(child.getScoreText());
 
 		tv = (TextView) view.findViewById(R.id.tvEpisodes);
 		tv.setText(child.getEpisodeProgress());
@@ -139,24 +139,27 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 	public static class ExpandListChild {
 
 		private String mName;
-		private String mScore;
+		private Float mScore;
 		private Integer mEpisode;
 		private Integer mMaxEpisodes;
 		private Integer mAnimeID;
+		private String mStatus;
 
 		public ExpandListChild() {
 		}
 
-		public ExpandListChild(String name, Integer animeID, String score, Integer episode, Integer maxEpisodes) {
+		public ExpandListChild(String name, Integer animeID, String score, Integer episode, Integer maxEpisodes,
+				String status) {
 			setName(name);
 			setScore(score);
 			setEpisode(episode);
 			setMaxEpisode(maxEpisodes);
 			setAnimeID(animeID);
+			setStatus(status);
 		}
 
 		public ExpandListChild(String name, Integer animeID) {
-			this(name, animeID, "-", 0, 0);
+			this(name, animeID, "-", 0, 0, "Watching");
 		}
 
 		/**
@@ -177,7 +180,7 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 		/**
 		 * @return the score
 		 */
-		public String getScore() {
+		public Float getScore() {
 			return mScore;
 		}
 
@@ -186,7 +189,18 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 		 *            - the score to set
 		 */
 		public void setScore(String score) {
-			mScore = score;
+			try {
+				mScore = Float.parseFloat(score);
+			} catch (NumberFormatException ex) {
+				mScore = -1F;
+			}
+		}
+
+		public String getScoreText() {
+			if (mScore < 0) {
+				return "-";
+			}
+			return mScore.toString();
 		}
 
 		/**
@@ -237,6 +251,21 @@ public class AnimeListAdapter extends BaseExpandableListAdapter {
 		 */
 		public void setAnimeID(Integer animeID) {
 			mAnimeID = animeID;
+		}
+
+		/**
+		 * @return the Status
+		 */
+		public String getStatus() {
+			return mStatus;
+		}
+
+		/**
+		 * @param Status
+		 *            the Status to set
+		 */
+		public void setStatus(String mStatus) {
+			this.mStatus = mStatus;
 		}
 	}
 

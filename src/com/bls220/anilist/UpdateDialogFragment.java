@@ -11,7 +11,10 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.NumberPicker;
+import android.widget.RatingBar;
+import android.widget.Spinner;
 
 /**
  * @author bsmith
@@ -32,8 +35,15 @@ public class UpdateDialogFragment extends DialogFragment {
 	private Integer curEp;
 	private Integer maxEp;
 	private Integer animeID;
-	NumberPicker epNumberPicker;
+	private Float score;
+	private String status;
 
+	private NumberPicker epNumberPicker;
+	private RatingBar scoreBar;
+	private Spinner statusSpinner;
+	private ArrayAdapter<String> statusAdapter;
+
+	@SuppressWarnings("unchecked")
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -42,9 +52,16 @@ public class UpdateDialogFragment extends DialogFragment {
 		View view = inflater.inflate(R.layout.dialog_update, null);
 
 		// Setup UI
-		epNumberPicker = (NumberPicker) view.findViewById(R.id.numberPicker1);
+		epNumberPicker = (NumberPicker) view.findViewById(R.id.episodeNumberPicker);
 		epNumberPicker.setMaxValue(maxEp >= 0 ? maxEp : 0);
 		epNumberPicker.setValue(curEp);
+
+		scoreBar = (RatingBar) view.findViewById(R.id.scoreRatingBar);
+		scoreBar.setRating(score);
+
+		statusSpinner = (Spinner) view.findViewById(R.id.spinner1);
+		statusAdapter = (ArrayAdapter<String>) statusSpinner.getAdapter();
+		statusSpinner.setSelection(statusAdapter.getPosition(status));
 
 		// Inflate and set the layout for the dialog
 		// Pass null as the parent view because its going in the dialog layout
@@ -81,6 +98,24 @@ public class UpdateDialogFragment extends DialogFragment {
 		}
 	}
 
+	/**
+	 * @return the score
+	 */
+	public Float getScore() {
+		if (scoreBar != null) {
+			return scoreBar.getRating() * 2;
+		}
+		return score * 2;
+	}
+
+	/**
+	 * @param score
+	 *            the score to set
+	 */
+	public void setScore(Float score) {
+		this.score = score / 2;
+	}
+
 	public void setMaxEpisodes(Integer max) {
 		maxEp = max;
 	}
@@ -93,7 +128,7 @@ public class UpdateDialogFragment extends DialogFragment {
 		if (epNumberPicker != null) {
 			return epNumberPicker.getValue();
 		}
-		return -1;
+		return curEp;
 	}
 
 	/**
@@ -109,6 +144,24 @@ public class UpdateDialogFragment extends DialogFragment {
 	 */
 	public void setAnimeID(Integer animeID) {
 		this.animeID = animeID;
+	}
+
+	/**
+	 * @return the status
+	 */
+	public String getStatus() {
+		if (statusSpinner != null) {
+			return (String) statusSpinner.getSelectedItem();
+		}
+		return status;
+	}
+
+	/**
+	 * @param status
+	 *            the status to set
+	 */
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 }

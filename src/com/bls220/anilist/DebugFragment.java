@@ -58,7 +58,8 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 
 		ExpandableListView animeList = (ExpandableListView) rootView.findViewById(R.id.animeListView);
 		animeListAdapter = new AnimeListAdapter(getActivity());
-		animeListAdapter.addItem(new ExpandListChild("Dummy Child", -1), new ExpandListGroup("Dummy Group"));
+		animeListAdapter.addItem(new ExpandListChild("Dummy Child", -1, "7.25", 7, 12, "On Hold"), new ExpandListGroup(
+				"Dummy Group"));
 		animeList.setAdapter(animeListAdapter);
 		animeList.setOnChildClickListener(this);
 
@@ -134,19 +135,21 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 					String name = entry.select("a").text();
 					String id = entry.select("a").attr("href");
 					id = id.substring(7, id.indexOf("/", 7));
+					// Get Columns
+					Elements cols = entry.select("td.sml_col");
 					// Get Score
-					String score = entry.select("[class~=^cscr]").text();
+					String score = cols.get(0).text();
 					// Get Progress
-					String[] progress = entry.select(".plus").get(0).parent().text().replace("+", "").trim().split("/");
+					String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
+
 					if (progress[0].isEmpty()) {
 						progress[0] = "-1";
 					}
 					Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
 					Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
 
-					animeListAdapter.addItem(
-							new ExpandListChild(String.format("%s (%s)", name, id), Integer.parseInt(id), score, curEp,
-									totEp), group);
+					animeListAdapter.addItem(new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id),
+							score, curEp, totEp, listHeaders.get(i).text()), group);
 				}
 			}
 
@@ -158,15 +161,18 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 	@Override
 	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 		ExpandListChild child = (ExpandListChild) v.getTag();
-		Toast.makeText(v.getContext(),
-				String.format("%s %s %s", child.getName(), child.getScore(), child.getEpisodeProgress()),
-				Toast.LENGTH_SHORT).show();
+		Toast.makeText(
+				v.getContext(),
+				String.format("%s %1.2f %s %s", child.getName(), child.getScore(), child.getEpisodeProgress(),
+						child.getStatus()), Toast.LENGTH_SHORT).show();
 		// Show update Dialog
 		UpdateDialogFragment dialog = new UpdateDialogFragment();
 		// get episode info from child
 		dialog.setMaxEpisodes(child.getMaxEpisode());
 		dialog.setEpisode(child.getEpisode());
 		dialog.setAnimeID(child.getAnimeID());
+		dialog.setScore(child.getScore());
+		dialog.setStatus(child.getStatus());
 		dialog.show(getFragmentManager(), "update");
 		return true;
 	}

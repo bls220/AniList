@@ -1,6 +1,7 @@
 package com.bls220.anilist;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -18,6 +19,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -33,6 +35,8 @@ import com.bls220.anilist.UpdateDialogFragment.UpdateDialogListener;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener, LoginDialogListener,
 		UpdateDialogListener {
+
+	private static final String TAG = MainActivity.class.getSimpleName();
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the sections. We use a
@@ -219,11 +223,26 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void onUpdateDialogPositiveClick(UpdateDialogFragment dialog) {
-		List<NameValuePair> paramPairs = new ArrayList<NameValuePair>(4);
-		paramPairs.add(new BasicNameValuePair("updateVar", dialog.getEpisode().toString()));
-		paramPairs.add(new BasicNameValuePair("anime_id", dialog.getAnimeID().toString()));
-		paramPairs.add(new BasicNameValuePair("utype", "ep_watched"));
-		paramPairs.add(new BasicNameValuePair("dur", "24"));
-		requestPage("/update_anime.php", true, paramPairs, null);
+		Log.i(TAG,
+				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ep: %d", dialog.getAnimeID(),
+						dialog.getStatus(), dialog.getScore(), dialog.getEpisode()));
+		NameValuePair[] pairs = new BasicNameValuePair[4];
+		pairs[0] = new BasicNameValuePair("anime_id", dialog.getAnimeID().toString());
+		pairs[1] = new BasicNameValuePair("dur", "24");
+
+		// Update Episode
+		pairs[2] = new BasicNameValuePair("updateVar", dialog.getEpisode().toString());
+		pairs[3] = new BasicNameValuePair("utype", "ep_watched");
+		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
+
+		// Update Score
+		pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
+		pairs[3] = new BasicNameValuePair("utype", "score");
+		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
+
+		// Update Status
+		pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus());
+		pairs[3] = new BasicNameValuePair("utype", "status");
+		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
 	}
 }
