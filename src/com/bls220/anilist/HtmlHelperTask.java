@@ -81,6 +81,7 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 
 	@Override
 	protected void onPreExecute() {
+		Log.v(TAG, "Task started.");
 		mActivity.setProgressBarIndeterminateVisibility(true);
 		// mProgress = new ProgressDialog(mActivity);
 		// mProgress.setTitle("Fetching...");
@@ -162,6 +163,7 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 		mActivity.setProgressBarIndeterminateVisibility(false);
 		// mProgress.dismiss();
 
+		Log.v(TAG, "Task Complete.");
 		// Return
 		if (mListener != null)
 			mListener.onTaskComplete(results);

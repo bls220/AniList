@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
 import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
 import com.bls220.anilist.AnimeListFragment.AnimeListController;
+import com.bls220.anilist.ExecuteHtmlTaskQueue.Task;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
@@ -295,6 +296,11 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		Log.i(TAG,
 				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ep: %d", dialog.getAnimeID(),
 						dialog.getStatus(), dialog.getScore(), dialog.getEpisode()));
+
+		final String updatePath = "/update_anime.php";
+		ExecuteHtmlTaskQueue execQueue = new ExecuteHtmlTaskQueue(this);
+		RequestParams params;
+
 		NameValuePair[] pairs = new BasicNameValuePair[4];
 		pairs[0] = new BasicNameValuePair("anime_id", dialog.getAnimeID().toString());
 		pairs[1] = new BasicNameValuePair("dur", "24");
@@ -302,17 +308,27 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		// Update Episode
 		pairs[2] = new BasicNameValuePair("updateVar", dialog.getEpisode().toString());
 		pairs[3] = new BasicNameValuePair("utype", "ep_watched");
-		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
+		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
+		execQueue.add(new Task(params, null));
 
 		// Update Score
 		pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
 		pairs[3] = new BasicNameValuePair("utype", "score");
-		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
+		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
+		execQueue.add(new Task(params, null));
 
 		// Update Status
 		pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus());
 		pairs[3] = new BasicNameValuePair("utype", "status");
-		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
+		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
+		execQueue.add(new Task(params, null));
+
+		// Fetch Anime list
+		params = new RequestParams(getString(R.string.baseURL).concat("/animelist/" + userID), false, null);
+		execQueue.add(new Task(params, animeListComplete));
+
+		// Run all
+		execQueue.execute();
 	}
 
 	OnTaskCompleteListener animeListComplete = new OnTaskCompleteListener() {
