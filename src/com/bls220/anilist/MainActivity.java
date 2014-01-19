@@ -3,163 +3,213 @@ package com.bls220.anilist;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import android.app.ActionBar;
-import android.app.FragmentTransaction;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
+import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
+import com.bls220.anilist.AnimeListFragment.AnimeListController;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
 import com.bls220.anilist.UpdateDialogFragment.UpdateDialogListener;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener, LoginDialogListener,
-		UpdateDialogListener {
+public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateDialogListener,
+		AnimeListController {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 
-	/**
-	 * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the sections. We use a
-	 * {@link android.support.v4.app.FragmentPagerAdapter} derivative, which will keep every loaded fragment in memory.
-	 * If this becomes too memory intensive, it may be best to switch to a
-	 * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-	 */
-	SectionsPagerAdapter mSectionsPagerAdapter;
-
-	/**
-	 * The {@link ViewPager} that will host the section contents.
-	 */
-	ViewPager mViewPager;
-
 	Integer userID = 0;
+
+	private DrawerLayout mDrawerLayout;
+	private ListView mDrawerList;
+	private ActionBarDrawerToggle mDrawerToggle;
+
+	private CharSequence mDrawerTitle;
+	private CharSequence mTitle;
+	private String[] mDrawerTitles;
+
+	private AnimeListAdapter animeListAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+
 		setContentView(R.layout.activity_main);
 
-		// Set up the action bar.
-		final ActionBar actionBar = getActionBar();
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		animeListAdapter = new AnimeListAdapter(this);
+		animeListAdapter.addItem(null, new ExpandListGroup("Please Login to view your list"));
 
-		// Create the adapter that will return a fragment for each of the three
-		// primary sections of the app.
-		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+		mTitle = mDrawerTitle = getTitle();
+		mDrawerTitles = getResources().getStringArray(R.array.drawer_items_array);
+		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
-		// Set up the ViewPager with the sections adapter.
-		mViewPager = (ViewPager) findViewById(R.id.pager);
-		mViewPager.setAdapter(mSectionsPagerAdapter);
+		// set a custom shadow that overlays the main content when the drawer opens
+		mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+		// set up the drawer's list view with items and click listener
+		mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mDrawerTitles));
+		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-		// When swiping between different sections, select the corresponding
-		// tab. We can also use ActionBar.Tab#select() to do this if we have
-		// a reference to the Tab.
-		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+		// enable ActionBar app icon to behave as action to toggle nav drawer
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		getActionBar().setHomeButtonEnabled(true);
+
+		// ActionBarDrawerToggle ties together the the proper interactions
+		// between the sliding drawer and the action bar app icon
+		mDrawerToggle = new ActionBarDrawerToggle(this, /* host Activity */
+		mDrawerLayout, /* DrawerLayout object */
+		R.drawable.ic_drawer, /* nav drawer image to replace 'Up' caret */
+		R.string.drawer_open, /* "open drawer" description for accessibility */
+		R.string.drawer_close /* "close drawer" description for accessibility */
+		) {
 			@Override
-			public void onPageSelected(int position) {
-				actionBar.setSelectedNavigationItem(position);
+			public void onDrawerClosed(View view) {
+				getActionBar().setTitle(mTitle);
+				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
 			}
-		});
 
-		// For each of the sections in the app, add a tab to the action bar.
-		for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
-			// Create a tab with text corresponding to the page title defined by
-			// the adapter. Also specify this Activity object, which implements
-			// the TabListener interface, as the callback (listener) for when
-			// this tab is selected.
-			actionBar.addTab(actionBar.newTab().setText(mSectionsPagerAdapter.getPageTitle(i)).setTabListener(this));
+			@Override
+			public void onDrawerOpened(View drawerView) {
+				getActionBar().setTitle(mDrawerTitle);
+				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+			}
+		};
+		mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+		if (savedInstanceState == null) {
+			selectItem(0);
 		}
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	/* Called whenever we call invalidateOptionsMenu() */
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		// If the nav drawer is open, hide action items related to the content view
+		boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
-	public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-		// When the given tab is selected, switch to the corresponding page in
-		// the ViewPager.
-		mViewPager.setCurrentItem(tab.getPosition());
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// The action bar home/up action should open or close the drawer.
+		// ActionBarDrawerToggle will take care of this.
+		if (mDrawerToggle.onOptionsItemSelected(item)) {
+			return true;
+		}
+		// Handle action buttons
+		switch (item.getItemId()) {
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	/* The click listner for ListView in the navigation drawer */
+	private class DrawerItemClickListener implements ListView.OnItemClickListener {
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			selectItem(position);
+		}
+	}
+
+	private void selectItem(int position) {
+		// update the main content by replacing fragments
+		Fragment fragment = null;
+		Bundle args = new Bundle();
+		boolean updateTitle = true;
+
+		switch (position) {
+		case 0:
+			// Show anime list
+			fragment = new AnimeListFragment();
+			break;
+		case 1:
+			// Show login Dialog
+			new LoginDialogFragment().show(getSupportFragmentManager(), "login");
+			updateTitle = false;
+			break;
+		case 2:
+			// Show debug screen
+			fragment = new DebugFragment();
+			break;
+		default:
+			fragment = new DummySectionFragment();
+			args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position);
+			fragment.setArguments(args);
+			break;
+		}
+
+		if (fragment != null) {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+		}
+
+		// update selected item and title, then close the drawer
+		mDrawerList.setItemChecked(position, true);
+		if (updateTitle)
+			setTitle(mDrawerTitles[position]);
+		mDrawerLayout.closeDrawer(mDrawerList);
 	}
 
 	@Override
-	public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-	}
-
-	@Override
-	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+	public void setTitle(CharSequence title) {
+		mTitle = title;
+		getActionBar().setTitle(mTitle);
 	}
 
 	/**
-	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to one of the sections/tabs/pages.
+	 * When using the ActionBarDrawerToggle, you must call it during onPostCreate() and onConfigurationChanged()...
 	 */
-	public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-		public SectionsPagerAdapter(FragmentManager fm) {
-			super(fm);
-		}
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		// Sync the toggle state after onRestoreInstanceState has occurred.
+		mDrawerToggle.syncState();
+	}
 
-		@Override
-		public Fragment getItem(int position) {
-			// getItem is called to instantiate the fragment for the given page.
-			// Return a DummySectionFragment (defined as a static inner class
-			// below) with the page number as its lone argument.
-			Fragment fragment;
-			Bundle args = new Bundle();
-			switch (position) {
-			case 2:
-				fragment = new DebugFragment();
-				break;
-			default:
-				fragment = new DummySectionFragment();
-				args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position + 1);
-				break;
-			}
-			fragment.setArguments(args);
-			return fragment;
-		}
-
-		@Override
-		public int getCount() {
-			// Show 3 total pages.
-			return 3;
-		}
-
-		@Override
-		public CharSequence getPageTitle(int position) {
-			Locale l = Locale.getDefault();
-			switch (position) {
-			case 0:
-				return getString(R.string.title_section1).toUpperCase(l);
-			case 1:
-				return getString(R.string.title_section2).toUpperCase(l);
-			case 2:
-				return getString(R.string.title_sectionDebug).toUpperCase(l);
-			}
-			return null;
-		}
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		// Pass any configuration change to the drawer toggls
+		mDrawerToggle.onConfigurationChanged(newConfig);
 	}
 
 	/**
@@ -201,21 +251,40 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		OnTaskCompleteListener loginListener = new OnTaskCompleteListener() {
 			@Override
 			public void onTaskComplete(TaskResults results) {
-				if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
-						&& results.status.getStatusCode() != HttpStatus.SC_OK) {
-					Toast.makeText(
-							MainActivity.this,
-							String.format("Error: [%d] %s", results.status.getStatusCode(),
-									results.status.getReasonPhrase()), Toast.LENGTH_LONG).show();
-					return;
-				}
-				TextView editOutput = ((TextView) findViewById(R.id.editOutput));
-				if (editOutput != null) {
+				if (results.status.getStatusCode() == HttpStatus.SC_ACCEPTED
+						|| results.status.getStatusCode() == HttpStatus.SC_OK) {
+					// Get UserID
 					Document doc = Jsoup.parse(results.output);
-					userID = Integer.parseInt(doc.select("a[href~=^/user/").attr("href").substring(6));
-					editOutput.append(userID.toString());
-					Toast.makeText(MainActivity.this, "Login Test Complete", Toast.LENGTH_SHORT).show();
+					String userURL = doc.select("a[href~=^/user/").attr("href");
+					if (!userURL.isEmpty()) {
+						userID = Integer.parseInt(userURL.substring(6));
+					} else {
+						userID = 0;
+					}
+
+					// Debug stuff
+					TextView editOutput = ((TextView) findViewById(R.id.editOutput));
+					if (editOutput != null) {
+						editOutput.append(userID.toString());
+						Toast.makeText(getBaseContext(), "Login Test Complete", Toast.LENGTH_SHORT).show();
+					}
+
+					// Done
+					if (userID > 0) {
+						Toast.makeText(getBaseContext(), String.format("Login Successful. User ID: %d", userID),
+								Toast.LENGTH_SHORT).show();
+						// get anime list
+						fetchAnimeList();
+						return;
+					}
+				} else {
+					Log.d(TAG,
+							String.format("Login Error: [%d] %s", results.status.getStatusCode(),
+									results.status.getReasonPhrase()));
 				}
+
+				// Error
+				Toast.makeText(getBaseContext(), "Login Failed", Toast.LENGTH_LONG).show();
 			}
 		};
 		requestPage("/login.php", true, params, loginListener);
@@ -244,5 +313,68 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus());
 		pairs[3] = new BasicNameValuePair("utype", "status");
 		requestPage("/update_anime.php", true, Arrays.asList(pairs.clone()), null);
+	}
+
+	OnTaskCompleteListener animeListComplete = new OnTaskCompleteListener() {
+
+		@Override
+		public void onTaskComplete(TaskResults results) {
+			if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
+					&& results.status.getStatusCode() != HttpStatus.SC_OK) {
+				Toast.makeText(
+						MainActivity.this,
+						String.format("Error: [%d] %s", results.status.getStatusCode(),
+								results.status.getReasonPhrase()), Toast.LENGTH_LONG).show();
+				return;
+			}
+			animeListAdapter.clear();
+			Document doc = Jsoup.parse(results.output);
+			// Get All lists
+			Element allLists = doc.getElementById("lists");
+			// Get List names
+			Elements listHeaders = allLists.getElementsByTag("h3");
+			// Get Lists
+			Elements lists = allLists.getElementsByClass("list");
+
+			for (int i = 0; i < listHeaders.size(); i++) {
+				ExpandListGroup group = new ExpandListGroup(listHeaders.get(i).text());
+				// Create children entries
+				Elements list = lists.get(i).getElementsByClass("rtitle");
+				for (Element entry : list) {
+					// Extract anime ID
+					String name = entry.select("a").text();
+					String id = entry.select("a").attr("href");
+					id = id.substring(7, id.indexOf("/", 7));
+					// Get Columns
+					Elements cols = entry.select("td.sml_col");
+					// Get Score
+					String score = cols.get(0).text();
+					// Get Progress
+					String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
+
+					if (progress[0].isEmpty()) {
+						progress[0] = "-1";
+					}
+					Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
+					Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
+
+					animeListAdapter.addItem(new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id),
+							score, curEp, totEp, listHeaders.get(i).text()), group);
+				}
+			}
+
+			animeListAdapter.notifyDataSetChanged();
+		}
+	};
+
+	@Override
+	public void fetchAnimeList() {
+		if (userID > 0)
+			requestPage("/animelist/" + userID, false, null, animeListComplete);
+	}
+
+	@Override
+	public AnimeListAdapter getAnimeListAdapter() {
+		return animeListAdapter;
 	}
 }

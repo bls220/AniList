@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_name">AniList</string>
@@ -6,7 +7,15 @@
     <string name="title_section2">Section 2</string>
     <string name="title_sectionDebug">Debug</string>
     <string name="baseURL">http://anilist.co</string>
+
     <color name="Black">#000000</color>
     <color name="ExpandChildBackground">#FFAFABAB</color>
     <color name="ExpandGroupBackground">#FF7C7C7C</color>
+
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
+    
+        <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+
 </resources>

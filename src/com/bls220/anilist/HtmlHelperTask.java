@@ -31,9 +31,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class HtmlHelperTask
-		extends
-		AsyncTask<HtmlHelperTask.RequestParams, Void, HtmlHelperTask.TaskResults> {
+public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void, HtmlHelperTask.TaskResults> {
 
 	private static final String TAG = HtmlHelperTask.class.getSimpleName();
 
@@ -58,8 +56,7 @@ public class HtmlHelperTask
 		boolean mPost = false;
 		List<NameValuePair> mParams;
 
-		public RequestParams(String url, Boolean doPost,
-				List<NameValuePair> params) {
+		public RequestParams(String url, Boolean doPost, List<NameValuePair> params) {
 			mPost = doPost;
 			mUrl = url;
 			mParams = params;
@@ -84,12 +81,13 @@ public class HtmlHelperTask
 
 	@Override
 	protected void onPreExecute() {
-		mProgress = new ProgressDialog(mActivity);
-		mProgress.setTitle("Fetching...");
-		mProgress.setMessage("Please wait.");
-		mProgress.setCancelable(false);
-		mProgress.setIndeterminate(true);
-		mProgress.show();
+		mActivity.setProgressBarIndeterminateVisibility(true);
+		// mProgress = new ProgressDialog(mActivity);
+		// mProgress.setTitle("Fetching...");
+		// mProgress.setMessage("Please wait.");
+		// mProgress.setCancelable(false);
+		// mProgress.setIndeterminate(true);
+		// mProgress.show();
 	}
 
 	@Override
@@ -122,13 +120,11 @@ public class HtmlHelperTask
 				httpResponse = client.execute(httpPost, httpContext);
 			} else {
 				// Do Get
-				Uri.Builder uriBuilder = Uri.parse(inputs.mUrl).buildUpon()
-						.scheme("http");
+				Uri.Builder uriBuilder = Uri.parse(inputs.mUrl).buildUpon().scheme("http");
 				// Add param data
 				if (inputs.mParams != null) {
 					for (NameValuePair pair : inputs.mParams) {
-						uriBuilder.appendQueryParameter(pair.getName(),
-								pair.getValue());
+						uriBuilder.appendQueryParameter(pair.getName(), pair.getValue());
 					}
 				}
 
@@ -153,24 +149,22 @@ public class HtmlHelperTask
 		}
 
 		if (results.status == null) {
-			results.status = new BasicStatusLine(HttpVersion.HTTP_1_1, 0,
-					results.errorMsg);
+			results.status = new BasicStatusLine(HttpVersion.HTTP_1_1, 0, results.errorMsg);
 		}
-		Log.d(TAG, String.format("Status: [%d] %s",
-				results.status.getStatusCode(),
-				results.status.getReasonPhrase()));
+		Log.d(TAG, String.format("Status: [%d] %s", results.status.getStatusCode(), results.status.getReasonPhrase()));
 		return results;
 	}
 
 	@Override
 	protected void onPostExecute(TaskResults results) {
 
+		// Cleanup
+		mActivity.setProgressBarIndeterminateVisibility(false);
+		// mProgress.dismiss();
+
 		// Return
 		if (mListener != null)
 			mListener.onTaskComplete(results);
-
-		// Cleanup
-		mProgress.dismiss();
 		return;
 	}
 

@@ -103,7 +103,6 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			Toast.makeText(activity, "Anime List Test", Toast.LENGTH_SHORT).show();
 			// Fetch anime page
 			// Set userID for debug
-			activity.userID = 11631;
 			activity.requestPage("/animelist/" + activity.userID, false, null, this);
 		}
 
