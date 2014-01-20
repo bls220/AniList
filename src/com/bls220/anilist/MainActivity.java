@@ -9,8 +9,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -34,9 +32,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
-import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
-import com.bls220.anilist.AnimeListFragment.AnimeListController;
 import com.bls220.anilist.ExecuteHtmlTaskQueue.Task;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.RequestParams;
@@ -44,8 +39,7 @@ import com.bls220.anilist.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
 import com.bls220.anilist.UpdateDialogFragment.UpdateDialogListener;
 
-public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateDialogListener,
-		AnimeListController {
+public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateDialogListener {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -59,17 +53,12 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	private CharSequence mTitle;
 	private String[] mDrawerTitles;
 
-	private AnimeListAdapter animeListAdapter;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setContentView(R.layout.activity_main);
-
-		animeListAdapter = new AnimeListAdapter(this);
-		animeListAdapter.addItem(null, new ExpandListGroup("Please Login to view your list"));
 
 		mTitle = mDrawerTitle = getTitle();
 		mDrawerTitles = getResources().getStringArray(R.array.drawer_items_array);
@@ -114,6 +103,20 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putInt("userID", userID);
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		if (savedInstanceState != null) {
+			userID = savedInstanceState.getInt("userID");
+		}
+	}
+
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main, menu);
@@ -154,32 +157,37 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		// update the main content by replacing fragments
 		Fragment fragment = null;
 		Bundle args = new Bundle();
+		String tag;
 		boolean updateTitle = true;
 
 		switch (position) {
 		case 0:
 			// Show anime list
 			fragment = new AnimeListFragment();
+			tag = "anime";
 			break;
 		case 1:
 			// Show login Dialog
 			new LoginDialogFragment().show(getSupportFragmentManager(), "login");
 			updateTitle = false;
+			tag = "login";
 			break;
 		case 2:
 			// Show debug screen
 			fragment = new DebugFragment();
+			tag = "debug";
 			break;
 		default:
 			fragment = new DummySectionFragment();
 			args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position);
 			fragment.setArguments(args);
+			tag = "dummy";
 			break;
 		}
 
 		if (fragment != null) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
-			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, tag).commit();
 		}
 
 		// update selected item and title, then close the drawer
@@ -274,7 +282,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 					if (userID > 0) {
 						Toast.makeText(getBaseContext(), String.format("Login Successful. User ID: %d", userID),
 								Toast.LENGTH_SHORT).show();
-						// get anime list
+						// Get anime list
 						fetchAnimeList();
 						return;
 					}
@@ -298,7 +306,14 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 						dialog.getStatus(), dialog.getScore(), dialog.getEpisode()));
 
 		final String updatePath = "/update_anime.php";
-		ExecuteHtmlTaskQueue execQueue = new ExecuteHtmlTaskQueue(this);
+		ExecuteHtmlTaskQueue execQueue = new ExecuteHtmlTaskQueue(this, new Runnable() {
+
+			@Override
+			public void run() {
+				// Refresh AnimeList
+				fetchAnimeList();
+			}
+		});
 		RequestParams params;
 
 		NameValuePair[] pairs = new BasicNameValuePair[4];
@@ -323,74 +338,14 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
 		execQueue.add(new Task(params, null));
 
-		// Fetch Anime list
-		params = new RequestParams(getString(R.string.baseURL).concat("/animelist/" + userID), false, null);
-		execQueue.add(new Task(params, animeListComplete));
-
 		// Run all
 		execQueue.execute();
 	}
 
-	OnTaskCompleteListener animeListComplete = new OnTaskCompleteListener() {
-
-		@Override
-		public void onTaskComplete(TaskResults results) {
-			if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
-					&& results.status.getStatusCode() != HttpStatus.SC_OK) {
-				Toast.makeText(
-						MainActivity.this,
-						String.format("Error: [%d] %s", results.status.getStatusCode(),
-								results.status.getReasonPhrase()), Toast.LENGTH_LONG).show();
-				return;
-			}
-			animeListAdapter.clear();
-			Document doc = Jsoup.parse(results.output);
-			// Get All lists
-			Element allLists = doc.getElementById("lists");
-			// Get List names
-			Elements listHeaders = allLists.getElementsByTag("h3");
-			// Get Lists
-			Elements lists = allLists.getElementsByClass("list");
-
-			for (int i = 0; i < listHeaders.size(); i++) {
-				ExpandListGroup group = new ExpandListGroup(listHeaders.get(i).text());
-				// Create children entries
-				Elements list = lists.get(i).getElementsByClass("rtitle");
-				for (Element entry : list) {
-					// Extract anime ID
-					String name = entry.select("a").text();
-					String id = entry.select("a").attr("href");
-					id = id.substring(7, id.indexOf("/", 7));
-					// Get Columns
-					Elements cols = entry.select("td.sml_col");
-					// Get Score
-					String score = cols.get(0).text();
-					// Get Progress
-					String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
-
-					if (progress[0].isEmpty()) {
-						progress[0] = "-1";
-					}
-					Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
-					Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
-
-					animeListAdapter.addItem(new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id),
-							score, curEp, totEp, listHeaders.get(i).text()), group);
-				}
-			}
-
-			animeListAdapter.notifyDataSetChanged();
-		}
-	};
-
-	@Override
 	public void fetchAnimeList() {
-		if (userID > 0)
-			requestPage("/animelist/" + userID, false, null, animeListComplete);
-	}
-
-	@Override
-	public AnimeListAdapter getAnimeListAdapter() {
-		return animeListAdapter;
+		AnimeListFragment animeFrag = (AnimeListFragment) getSupportFragmentManager().findFragmentByTag("anime");
+		if (animeFrag.isVisible()) {
+			animeFrag.fetchAnimeList();
+		}
 	}
 }

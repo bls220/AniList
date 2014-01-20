@@ -29,16 +29,18 @@ public class ExecuteHtmlTaskQueue implements OnTaskCompleteListener {
 
 	final Activity mActivity;
 	final ArrayList<Task> mTasks;
+	final Runnable mGroupCompleteListener;
 
 	int tasksDone;
 
-	public ExecuteHtmlTaskQueue(Activity activity) {
+	public ExecuteHtmlTaskQueue(Activity activity, Runnable groupCompleteListener) {
 		mActivity = activity;
 		mTasks = new ArrayList<Task>();
+		mGroupCompleteListener = groupCompleteListener;
 	}
 
-	public ExecuteHtmlTaskQueue(Activity activity, Task... tasks) {
-		this(activity);
+	public ExecuteHtmlTaskQueue(Activity activity, Runnable groupCompleteListener, Task... tasks) {
+		this(activity, groupCompleteListener);
 		for (Task task : tasks) {
 			add(task);
 		}
@@ -65,6 +67,11 @@ public class ExecuteHtmlTaskQueue implements OnTaskCompleteListener {
 			// Go to next task
 			task = mTasks.get(tasksDone);
 			new HtmlHelperTask(mActivity, this).execute(task.params);
+		} else {
+			// Done
+			if (mGroupCompleteListener != null) {
+				mGroupCompleteListener.run();
+			}
 		}
 	}
 

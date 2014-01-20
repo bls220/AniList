@@ -3,6 +3,16 @@
  */
 package com.bls220.anilist;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -14,39 +24,41 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
+import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
+import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
+import com.bls220.anilist.HtmlHelperTask.RequestParams;
+import com.bls220.anilist.HtmlHelperTask.TaskResults;
 
 /**
  * @author bsmith
  * 
  */
-public class AnimeListFragment extends Fragment implements OnChildClickListener {
+public class AnimeListFragment extends Fragment implements OnChildClickListener, OnTaskCompleteListener {
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		animeListAdapter = new AnimeListAdapter(getActivity());
+		animeListAdapter.addItem(null, new ExpandListGroup("Please Login to view your list"));
+	}
+
+	private AnimeListAdapter animeListAdapter;
 
 	TextView editOutput;
-	AnimeListController animeController;
-
-	public interface AnimeListController {
-		public AnimeListAdapter getAnimeListAdapter();
-
-		public void fetchAnimeList();
-	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_main_anime, container, false);
 
-		try {
-			animeController = (AnimeListController) getActivity();
-		} catch (ClassCastException e) {
-			// The activity doesn't implement the interface, throw exception
-			throw new ClassCastException(getActivity().toString() + " must implement AnimeListController");
-		}
+		setRetainInstance(true);
 
 		ExpandableListView animeList = (ExpandableListView) rootView.findViewById(R.id.animeListView);
-		animeList.setAdapter(animeController.getAnimeListAdapter());
+		animeList.setAdapter(animeListAdapter);
 		animeList.setOnChildClickListener(this);
 
-		// Get anime list
-		animeController.fetchAnimeList();
+		// get Anime List
+		fetchAnimeList();
+
 		return rootView;
 	}
 
@@ -67,5 +79,68 @@ public class AnimeListFragment extends Fragment implements OnChildClickListener 
 		dialog.setStatus(child.getStatus());
 		dialog.show(getFragmentManager(), "update");
 		return true;
+	}
+
+	@Override
+	public void onTaskComplete(TaskResults results) {
+		if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
+				&& results.status.getStatusCode() != HttpStatus.SC_OK) {
+			Toast.makeText(getActivity(),
+					String.format("Error: [%d] %s", results.status.getStatusCode(), results.status.getReasonPhrase()),
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+		animeListAdapter.clear();
+		Document doc = Jsoup.parse(results.output);
+		// Get All lists
+		Element allLists = doc.getElementById("lists");
+		// Get List names
+		Elements listHeaders = allLists.getElementsByTag("h3");
+		// Get Lists
+		Elements lists = allLists.getElementsByClass("list");
+
+		for (int i = 0; i < listHeaders.size(); i++) {
+			ExpandListGroup group = new ExpandListGroup(listHeaders.get(i).text());
+			// Create children entries
+			Elements list = lists.get(i).getElementsByClass("rtitle");
+			for (Element entry : list) {
+				// Extract anime ID
+				String name = entry.select("a").text();
+				String id = entry.select("a").attr("href");
+				id = id.substring(7, id.indexOf("/", 7));
+				// Get Columns
+				Elements cols = entry.select("td.sml_col");
+				// Get Score
+				String score = cols.get(0).text();
+				// Get Progress
+				String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
+
+				if (progress[0].isEmpty()) {
+					progress[0] = "-1";
+				}
+				Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
+				Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
+
+				animeListAdapter.addItem(new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id),
+						score, curEp, totEp, group.getName()), group);
+			}
+		}
+
+		animeListAdapter.notifyDataSetChanged();
+	}
+
+	public void fetchAnimeList() {
+		MainActivity activity = (MainActivity) getActivity();
+		if (activity.userID > 0)
+			requestPage("/animelist/" + activity.userID, false, null, this);
+	}
+
+	public void requestPage(String path, Boolean doPost, List<NameValuePair> paramPairs, OnTaskCompleteListener listener) {
+		if (paramPairs == null) {
+			paramPairs = new ArrayList<NameValuePair>();
+		}
+		HtmlHelperTask task = new HtmlHelperTask(getActivity(), listener);
+		RequestParams params = new RequestParams(getString(R.string.baseURL).concat(path), doPost, paramPairs);
+		task.execute(params);
 	}
 }
