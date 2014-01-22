@@ -9,6 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.method.ScrollingMovementMethod;
@@ -19,11 +20,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
 import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
+import com.bls220.anilist.FetchBitmap.OnBitmapResultListner;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
 
@@ -53,6 +56,23 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			@Override
 			public void onClick(View v) {
 				editOutput.setText("");
+			}
+		});
+
+		final ImageView img = (ImageView) rootView.findViewById(R.id.imgProfile);
+
+		((Button) (rootView.findViewById(R.id.btnImage))).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				FetchBitmap task = new FetchBitmap("http://img.anilist.co/user/sml/"
+						+ ((MainActivity) getActivity()).userID + ".jpg", new OnBitmapResultListner() {
+
+					@Override
+					public void onBitmapResult(Bitmap bm) {
+						img.setImageBitmap(bm);
+					}
+				});
+				task.execute();
 			}
 		});
 

@@ -10,6 +10,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import android.annotation.TargetApi;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -73,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		// enable ActionBar app icon to behave as action to toggle nav drawer
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-		getActionBar().setHomeButtonEnabled(true);
+		enableHomeButton();
 
 		// ActionBarDrawerToggle ties together the the proper interactions
 		// between the sliding drawer and the action bar app icon
@@ -100,6 +101,11 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		if (savedInstanceState == null) {
 			selectItem(0);
 		}
+	}
+
+	@TargetApi(14)
+	private void enableHomeButton() {
+		getActionBar().setHomeButtonEnabled(true);
 	}
 
 	@Override
@@ -320,23 +326,32 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		pairs[0] = new BasicNameValuePair("anime_id", dialog.getAnimeID().toString());
 		pairs[1] = new BasicNameValuePair("dur", "24");
 
-		// Update Episode
-		pairs[2] = new BasicNameValuePair("updateVar", dialog.getEpisode().toString());
-		pairs[3] = new BasicNameValuePair("utype", "ep_watched");
-		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
-		execQueue.add(new Task(params, null));
+		if (dialog.ProgressNeedsUpdate()) {
+			// Update Episode
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getEpisode().toString());
+			pairs[3] = new BasicNameValuePair("utype", "ep_watched");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
 
-		// Update Score
-		pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
-		pairs[3] = new BasicNameValuePair("utype", "score");
-		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
-		execQueue.add(new Task(params, null));
+		if (dialog.ScoreNeedsUpdate()) {
+			// Update Score
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
+			pairs[3] = new BasicNameValuePair("utype", "score");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
 
-		// Update Status
-		pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus());
-		pairs[3] = new BasicNameValuePair("utype", "status");
-		params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs.clone()));
-		execQueue.add(new Task(params, null));
+		if (dialog.StatusNeedsUpdate()) {
+			// Update Status
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus());
+			pairs[3] = new BasicNameValuePair("utype", "status");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
 
 		// Run all
 		execQueue.execute();
@@ -344,7 +359,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 	public void fetchAnimeList() {
 		AnimeListFragment animeFrag = (AnimeListFragment) getSupportFragmentManager().findFragmentByTag("anime");
-		if (animeFrag.isVisible()) {
+		if (animeFrag != null && animeFrag.isVisible()) {
 			animeFrag.fetchAnimeList();
 		}
 	}

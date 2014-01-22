@@ -11,9 +11,13 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.NumberPicker;
+import android.widget.NumberPicker.OnValueChangeListener;
 import android.widget.RatingBar;
+import android.widget.RatingBar.OnRatingBarChangeListener;
 import android.widget.Spinner;
 
 /**
@@ -43,6 +47,10 @@ public class UpdateDialogFragment extends DialogFragment {
 	private Spinner statusSpinner;
 	private ArrayAdapter<String> statusAdapter;
 
+	private boolean epNeedsUpdate;
+	private boolean scoreNeedsUpdate;
+	private boolean statusNeedsUpdate;
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -54,14 +62,43 @@ public class UpdateDialogFragment extends DialogFragment {
 		// Setup UI
 		epNumberPicker = (NumberPicker) view.findViewById(R.id.episodeNumberPicker);
 		epNumberPicker.setMaxValue(maxEp >= 0 ? maxEp : 0);
+		epNumberPicker.setMinValue(1);
 		epNumberPicker.setValue(curEp);
+
+		final Integer startEpVal = curEp;
+		epNumberPicker.setOnValueChangedListener(new OnValueChangeListener() {
+			@Override
+			public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+				epNeedsUpdate = (newVal != startEpVal);
+			}
+		});
 
 		scoreBar = (RatingBar) view.findViewById(R.id.scoreRatingBar);
 		scoreBar.setRating(score);
 
+		final Float startScoreVal = score;
+		scoreBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
+			@Override
+			public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+				scoreNeedsUpdate = (rating != startScoreVal);
+			}
+		});
+
 		statusSpinner = (Spinner) view.findViewById(R.id.spinner1);
 		statusAdapter = (ArrayAdapter<String>) statusSpinner.getAdapter();
 		statusSpinner.setSelection(statusAdapter.getPosition(status));
+
+		final Integer startStatusPos = statusAdapter.getPosition(status);
+		statusSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View v, int pos, long id) {
+				statusNeedsUpdate = (pos != startStatusPos);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+		});
 
 		// Inflate and set the layout for the dialog
 		// Pass null as the parent view because its going in the dialog layout
@@ -162,6 +199,18 @@ public class UpdateDialogFragment extends DialogFragment {
 	 */
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public boolean StatusNeedsUpdate() {
+		return statusNeedsUpdate;
+	}
+
+	public boolean ScoreNeedsUpdate() {
+		return scoreNeedsUpdate;
+	}
+
+	public boolean ProgressNeedsUpdate() {
+		return epNeedsUpdate;
 	}
 
 }

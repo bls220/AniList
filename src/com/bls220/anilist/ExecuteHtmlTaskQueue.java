@@ -52,8 +52,10 @@ public class ExecuteHtmlTaskQueue implements OnTaskCompleteListener {
 	}
 
 	public void execute() {
-		Task start = mTasks.get(0);
-		new HtmlHelperTask(mActivity, this).execute(start.params);
+		if (!mTasks.isEmpty()) {
+			Task start = mTasks.get(0);
+			new HtmlHelperTask(mActivity, this).execute(start.params);
+		}
 	}
 
 	@Override

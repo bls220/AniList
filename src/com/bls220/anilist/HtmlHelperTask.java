@@ -101,7 +101,7 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 
 		HttpParams httpParameters = new BasicHttpParams();
 		// Set the timeout for waiting for data.
-		int timeoutSocket = 5000;
+		int timeoutSocket = 15000;
 		HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
 
 		// Get client

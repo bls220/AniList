@@ -66,4 +66,24 @@
         android:padding="1dip"
         tools:listitem="@layout/expandlist_group_item" />
 
+    <Button
+        android:id="@+id/btnImage"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/btnAnimeList"
+        android:layout_alignBottom="@+id/btnAnimeList"
+        android:layout_toRightOf="@+id/btnAnimeList"
+        android:text="Get\nImg" />
+
+    <ImageView
+        android:id="@+id/imgProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/animeListView"
+        android:layout_below="@+id/editOutput"
+        android:layout_toRightOf="@+id/btnClear"
+        android:scaleType="fitXY"
+        android:src="@drawable/text_border" />
+
 </RelativeLayout>

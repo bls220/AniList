@@ -11,6 +11,6 @@
     <string-array name="drawer_items_array">
         <item>Anime List</item>
         <item>Login</item>
-<!--         <item>Debug</item> -->
+        <item>Debug</item>
     </string-array>
 </resources>
