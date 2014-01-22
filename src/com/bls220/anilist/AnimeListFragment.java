@@ -38,8 +38,12 @@ public class AnimeListFragment extends Fragment implements OnChildClickListener,
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		animeListAdapter = new AnimeListAdapter(getActivity());
-		animeListAdapter.addItem(null, new ExpandListGroup("Please Login to view your list"));
+		MainActivity activity = (MainActivity) getActivity();
+		animeListAdapter = new AnimeListAdapter(activity);
+		if (activity.userID > 0)
+			animeListAdapter.addItem(null, new ExpandListGroup("Loading..."));
+		else
+			animeListAdapter.addItem(null, new ExpandListGroup("Please Login to view your list"));
 	}
 
 	private AnimeListAdapter animeListAdapter;
@@ -82,51 +86,68 @@ public class AnimeListFragment extends Fragment implements OnChildClickListener,
 	}
 
 	@Override
-	public void onTaskComplete(TaskResults results) {
+	public void onTaskComplete(final TaskResults results) {
+		animeListAdapter.clear();
+
 		if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
 				&& results.status.getStatusCode() != HttpStatus.SC_OK) {
 			Toast.makeText(getActivity(),
 					String.format("Error: [%d] %s", results.status.getStatusCode(), results.status.getReasonPhrase()),
 					Toast.LENGTH_LONG).show();
+			animeListAdapter.addItem(null, new ExpandListGroup("An Error Occured. Please Try Agian."));
+			animeListAdapter.notifyDataSetChanged();
 			return;
 		}
-		animeListAdapter.clear();
-		Document doc = Jsoup.parse(results.output);
-		// Get All lists
-		Element allLists = doc.getElementById("lists");
-		// Get List names
-		Elements listHeaders = allLists.getElementsByTag("h3");
-		// Get Lists
-		Elements lists = allLists.getElementsByClass("list");
 
-		for (int i = 0; i < listHeaders.size(); i++) {
-			ExpandListGroup group = new ExpandListGroup(listHeaders.get(i).text());
-			// Create children entries
-			Elements list = lists.get(i).getElementsByClass("rtitle");
-			for (Element entry : list) {
-				// Extract anime ID
-				String name = entry.select("a").text();
-				String id = entry.select("a").attr("href");
-				id = id.substring(7, id.indexOf("/", 7));
-				// Get Columns
-				Elements cols = entry.select("td.sml_col");
-				// Get Score
-				String score = cols.get(0).text();
-				// Get Progress
-				String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
+		new Thread(new Runnable() {
 
-				if (progress[0].isEmpty()) {
-					progress[0] = "-1";
+			@Override
+			public void run() {
+				Document doc = Jsoup.parse(results.output);
+				// Get All lists
+				Element allLists = doc.getElementById("lists");
+				// Get List names
+				Elements listHeaders = allLists.getElementsByTag("h3");
+				// Get Lists
+				Elements lists = allLists.getElementsByClass("list");
+
+				for (int i = 0; i < listHeaders.size(); i++) {
+					ExpandListGroup group = new ExpandListGroup(listHeaders.get(i).text());
+					// Create children entries
+					Elements list = lists.get(i).getElementsByClass("rtitle");
+					for (Element entry : list) {
+						// Extract anime ID
+						String name = entry.select("a").text();
+						String id = entry.select("a").attr("href");
+						id = id.substring(7, id.indexOf("/", 7));
+						// Get Columns
+						Elements cols = entry.select("td.sml_col");
+						// Get Score
+						String score = cols.get(0).text();
+						// Get Progress
+						String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
+
+						if (progress[0].isEmpty()) {
+							progress[0] = "-1";
+						}
+						Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
+						Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1])
+								: Integer.parseInt(progress[0]);
+
+						animeListAdapter.addItem(
+								new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id), score, curEp,
+										totEp, group.getName()), group);
+					}
 				}
-				Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
-				Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
-
-				animeListAdapter.addItem(new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id),
-						score, curEp, totEp, group.getName()), group);
+				getActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						animeListAdapter.notifyDataSetChanged();
+					}
+				});
 			}
-		}
+		}).start();
 
-		animeListAdapter.notifyDataSetChanged();
 	}
 
 	public void fetchAnimeList() {
