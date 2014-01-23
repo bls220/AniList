@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 
 import android.annotation.TargetApi;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
@@ -29,11 +30,13 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bls220.anilist.ExecuteHtmlTaskQueue.Task;
+import com.bls220.anilist.FetchBitmap.OnBitmapResultListner;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
@@ -49,6 +52,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerList;
 	private ActionBarDrawerToggle mDrawerToggle;
+	private View mDrawerHeader;
 
 	private CharSequence mDrawerTitle;
 	private CharSequence mTitle;
@@ -69,6 +73,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		// set a custom shadow that overlays the main content when the drawer opens
 		mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
 		// set up the drawer's list view with items and click listener
+		mDrawerHeader = getLayoutInflater().inflate(R.layout.list_item_avatar, null);
+		mDrawerList.addHeaderView(mDrawerHeader);
 		mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mDrawerTitles));
 		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
@@ -99,7 +105,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		mDrawerLayout.setDrawerListener(mDrawerToggle);
 
 		if (savedInstanceState == null) {
-			selectItem(0);
+			selectItem(1);
 		}
 	}
 
@@ -168,15 +174,20 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		switch (position) {
 		case 0:
+			if (userID > 0) {
+				// idk yet
+			} else {
+				// Show login Dialog
+				new LoginDialogFragment().show(getSupportFragmentManager(), "login");
+				mDrawerLayout.closeDrawer(mDrawerList);
+			}
+			updateTitle = false;
+			tag = "user";
+			break;
+		case 1:
 			// Show anime list
 			fragment = new AnimeListFragment();
 			tag = "anime";
-			break;
-		case 1:
-			// Show login Dialog
-			new LoginDialogFragment().show(getSupportFragmentManager(), "login");
-			updateTitle = false;
-			tag = "login";
 			break;
 		case 2:
 			// Show debug screen
@@ -188,6 +199,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position);
 			fragment.setArguments(args);
 			tag = "dummy";
+			updateTitle = false;
 			break;
 		}
 
@@ -199,7 +211,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		// update selected item and title, then close the drawer
 		mDrawerList.setItemChecked(position, true);
 		if (updateTitle)
-			setTitle(mDrawerTitles[position]);
+			setTitle(mDrawerTitles[position - 1]);
 		mDrawerLayout.closeDrawer(mDrawerList);
 	}
 
@@ -290,6 +302,17 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 								Toast.LENGTH_SHORT).show();
 						// Get anime list
 						fetchAnimeList();
+						// Get avatar and info
+						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(doc.getElementsByTag("header")
+								.select("h1").text());
+						FetchBitmap task = new FetchBitmap("http://img.anilist.co/user/sml/" + userID + ".jpg",
+								new OnBitmapResultListner() {
+									@Override
+									public void onBitmapResult(Bitmap bm) {
+										((ImageView) mDrawerHeader.findViewById(R.id.imageView1)).setImageBitmap(bm);
+									}
+								});
+						task.execute();
 						return;
 					}
 				} else {
