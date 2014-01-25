@@ -14,20 +14,26 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 public class FetchBitmap extends AsyncTask<Void, Void, Bitmap> {
-	public interface OnBitmapResultListner {
+	public interface OnBitmapResultListener {
 		public void onBitmapResult(Bitmap bm);
 	}
 
 	private static final String TAG = FetchBitmap.class.getSimpleName();
 
 	String url;
-	OnBitmapResultListner callback;
+	OnBitmapResultListener callback;
 	Context context;
+	boolean useCached;
 
-	public FetchBitmap(Context context, String url, OnBitmapResultListner onBitmapResultListner) {
+	public FetchBitmap(Context context, String url, OnBitmapResultListener onBitmapResultListner, boolean useCached) {
 		this.url = url;
 		this.callback = onBitmapResultListner;
 		this.context = context;
+		this.useCached = useCached;
+	}
+
+	public FetchBitmap(Context context, String url, OnBitmapResultListener onBitmapResultListener) {
+		this(context, url, onBitmapResultListener, true);
 	}
 
 	@Override
@@ -40,7 +46,7 @@ public class FetchBitmap extends AsyncTask<Void, Void, Bitmap> {
 			Log.d(TAG, "Requesting: " + filename);
 			// Is the file cached?
 			File file = new File(context.getFilesDir() + filename);
-			if (file.exists()) {
+			if (file.exists() && useCached) {
 				Log.d(TAG, file + " exists.");
 				bm = BitmapFactory.decodeFile(file.getAbsolutePath());
 			} else {
@@ -61,12 +67,13 @@ public class FetchBitmap extends AsyncTask<Void, Void, Bitmap> {
 			e.printStackTrace();
 		}
 
-		return bm; // <<< return Bitmap
+		return bm;
 	}
 
 	@Override
 	protected void onPostExecute(Bitmap result) {
-		callback.onBitmapResult(result);
+		if (callback != null)
+			callback.onBitmapResult(result);
 	}
 
 }

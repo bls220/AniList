@@ -36,7 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bls220.anilist.ExecuteHtmlTaskQueue.Task;
-import com.bls220.anilist.FetchBitmap.OnBitmapResultListner;
+import com.bls220.anilist.FetchBitmap.OnBitmapResultListener;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
@@ -312,7 +312,9 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 						// Get avatar and info
 						userName = doc.getElementsByTag("header").select("h1").text();
 						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
+						// Use cached and then update file
 						fetchAvatar();
+						fetchAvatar(false);
 						return;
 					}
 				} else {
@@ -381,13 +383,17 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	private void fetchAvatar() {
+		fetchAvatar(true);
+	}
+
+	private void fetchAvatar(boolean useCached) {
 		new FetchBitmap(MainActivity.this, "http://img.anilist.co/user/sml/" + userID + ".jpg",
-				new OnBitmapResultListner() {
+				new OnBitmapResultListener() {
 					@Override
 					public void onBitmapResult(Bitmap bm) {
 						((ImageView) mDrawerHeader.findViewById(R.id.imageView1)).setImageBitmap(bm);
 					}
-				}).execute();
+				}, useCached).execute();
 	}
 
 	public void fetchAnimeList() {

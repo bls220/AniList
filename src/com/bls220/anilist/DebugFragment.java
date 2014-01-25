@@ -26,7 +26,7 @@ import android.widget.Toast;
 
 import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
 import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
-import com.bls220.anilist.FetchBitmap.OnBitmapResultListner;
+import com.bls220.anilist.FetchBitmap.OnBitmapResultListener;
 import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.HtmlHelperTask.TaskResults;
 
@@ -65,7 +65,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			@Override
 			public void onClick(View v) {
 				FetchBitmap task = new FetchBitmap(getActivity(), "http://img.anilist.co/user/sml/"
-						+ ((MainActivity) getActivity()).userID + ".jpg", new OnBitmapResultListner() {
+						+ ((MainActivity) getActivity()).userID + ".jpg", new OnBitmapResultListener() {
 
 					@Override
 					public void onBitmapResult(Bitmap bm) {
