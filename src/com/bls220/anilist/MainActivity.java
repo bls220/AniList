@@ -48,6 +48,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	private static final String TAG = MainActivity.class.getSimpleName();
 
 	Integer userID = 0;
+	String userName = "";
 
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerList;
@@ -118,6 +119,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("userID", userID);
+		outState.putString("userName", userName);
 	}
 
 	@Override
@@ -125,6 +127,10 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		super.onRestoreInstanceState(savedInstanceState);
 		if (savedInstanceState != null) {
 			userID = savedInstanceState.getInt("userID");
+			userName = savedInstanceState.getString("userName");
+			if (!userName.isEmpty()) {
+				((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
+			}
 		}
 	}
 
@@ -303,8 +309,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 						// Get anime list
 						fetchAnimeList();
 						// Get avatar and info
-						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(doc.getElementsByTag("header")
-								.select("h1").text());
+						userName = doc.getElementsByTag("header").select("h1").text();
+						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
 						FetchBitmap task = new FetchBitmap("http://img.anilist.co/user/sml/" + userID + ".jpg",
 								new OnBitmapResultListner() {
 									@Override
