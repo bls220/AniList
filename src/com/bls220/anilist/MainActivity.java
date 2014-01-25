@@ -131,6 +131,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			if (!userName.isEmpty()) {
 				((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
 			}
+			fetchAvatar();
 		}
 	}
 
@@ -311,14 +312,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 						// Get avatar and info
 						userName = doc.getElementsByTag("header").select("h1").text();
 						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
-						FetchBitmap task = new FetchBitmap("http://img.anilist.co/user/sml/" + userID + ".jpg",
-								new OnBitmapResultListner() {
-									@Override
-									public void onBitmapResult(Bitmap bm) {
-										((ImageView) mDrawerHeader.findViewById(R.id.imageView1)).setImageBitmap(bm);
-									}
-								});
-						task.execute();
+						fetchAvatar();
 						return;
 					}
 				} else {
@@ -384,6 +378,16 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		// Run all
 		execQueue.execute();
+	}
+
+	private void fetchAvatar() {
+		new FetchBitmap(MainActivity.this, "http://img.anilist.co/user/sml/" + userID + ".jpg",
+				new OnBitmapResultListner() {
+					@Override
+					public void onBitmapResult(Bitmap bm) {
+						((ImageView) mDrawerHeader.findViewById(R.id.imageView1)).setImageBitmap(bm);
+					}
+				}).execute();
 	}
 
 	public void fetchAnimeList() {

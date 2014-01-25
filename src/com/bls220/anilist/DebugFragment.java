@@ -64,7 +64,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 		((Button) (rootView.findViewById(R.id.btnImage))).setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				FetchBitmap task = new FetchBitmap("http://img.anilist.co/user/sml/"
+				FetchBitmap task = new FetchBitmap(getActivity(), "http://img.anilist.co/user/sml/"
 						+ ((MainActivity) getActivity()).userID + ".jpg", new OnBitmapResultListner() {
 
 					@Override
