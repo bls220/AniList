@@ -1,15 +1,15 @@
 /**
  * 
  */
-package com.bls220.anilist;
+package com.bls220.anilist.utils;
 
 import java.util.ArrayList;
 
 import android.app.Activity;
 
-import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
-import com.bls220.anilist.HtmlHelperTask.RequestParams;
-import com.bls220.anilist.HtmlHelperTask.TaskResults;
+import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
+import com.bls220.anilist.utils.HtmlHelperTask.RequestParams;
+import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 
 /**
  * @author bsmith

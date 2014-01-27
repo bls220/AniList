@@ -35,19 +35,28 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bls220.anilist.ExecuteHtmlTaskQueue.Task;
-import com.bls220.anilist.FetchBitmap.OnBitmapResultListener;
-import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
-import com.bls220.anilist.HtmlHelperTask.RequestParams;
-import com.bls220.anilist.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
-import com.bls220.anilist.UpdateDialogFragment.UpdateDialogListener;
+import com.bls220.anilist.anime.AnimeListFragment;
+import com.bls220.anilist.anime.UpdateAnimeDialogFragment;
+import com.bls220.anilist.anime.UpdateAnimeDialogFragment.UpdateAnimeDialogListener;
+import com.bls220.anilist.manga.MangaListFragment;
+import com.bls220.anilist.manga.UpdateMangaDialogFragment;
+import com.bls220.anilist.manga.UpdateMangaDialogFragment.UpdateMangaDialogListener;
+import com.bls220.anilist.utils.ExecuteHtmlTaskQueue;
+import com.bls220.anilist.utils.ExecuteHtmlTaskQueue.Task;
+import com.bls220.anilist.utils.FetchBitmap;
+import com.bls220.anilist.utils.FetchBitmap.OnBitmapResultListener;
+import com.bls220.anilist.utils.HtmlHelperTask;
+import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
+import com.bls220.anilist.utils.HtmlHelperTask.RequestParams;
+import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 
-public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateDialogListener {
+public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateAnimeDialogListener,
+		UpdateMangaDialogListener {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 
-	Integer userID = 0;
+	private Integer userID = 0;
 	String userName = "";
 
 	private DrawerLayout mDrawerLayout;
@@ -118,7 +127,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putInt("userID", userID);
+		outState.putInt("userID", getUserID());
 		outState.putString("userName", userName);
 	}
 
@@ -181,7 +190,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		switch (position) {
 		case 0:
-			if (userID > 0) {
+			if (getUserID() > 0) {
 				// idk yet
 			} else {
 				// Show login Dialog
@@ -197,6 +206,11 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			tag = "anime";
 			break;
 		case 2:
+			// Show manga list
+			fragment = new MangaListFragment();
+			tag = "manga";
+			break;
+		case 3:
 			// Show debug screen
 			fragment = new DebugFragment();
 			tag = "debug";
@@ -204,7 +218,6 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		default:
 			fragment = new DummySectionFragment();
 			args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position);
-			fragment.setArguments(args);
 			tag = "dummy";
 			updateTitle = false;
 			break;
@@ -212,6 +225,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		if (fragment != null) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragment.setArguments(args);
 			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, tag).commit();
 		}
 
@@ -299,16 +313,18 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 					// Debug stuff
 					TextView editOutput = ((TextView) findViewById(R.id.editOutput));
 					if (editOutput != null) {
-						editOutput.append(userID.toString());
+						editOutput.append(getUserID().toString());
 						Toast.makeText(getBaseContext(), "Login Test Complete", Toast.LENGTH_SHORT).show();
 					}
 
 					// Done
-					if (userID > 0) {
-						Toast.makeText(getBaseContext(), String.format("Login Successful. User ID: %d", userID),
+					if (getUserID() > 0) {
+						Toast.makeText(getBaseContext(), String.format("Login Successful. User ID: %d", getUserID()),
 								Toast.LENGTH_SHORT).show();
 						// Get anime list
 						fetchAnimeList();
+						// Get manga list
+						fetchMangaList();
 						// Get avatar and info
 						userName = doc.getElementsByTag("header").select("h1").text();
 						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
@@ -331,7 +347,68 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	@Override
-	public void onUpdateDialogPositiveClick(UpdateDialogFragment dialog) {
+	public void onUpdateMangaDialogPositiveClick(UpdateMangaDialogFragment dialog) {
+		Log.i(TAG,
+				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ch: %d  Vol: %d", dialog.getMangaID(),
+						dialog.getStatus(), dialog.getScore(), dialog.getChapter(), dialog.getVolume()));
+
+		final String updatePath = "/update_manga.php";
+		ExecuteHtmlTaskQueue execQueue = new ExecuteHtmlTaskQueue(this, new Runnable() {
+
+			@Override
+			public void run() {
+				// Refresh MangaList
+				fetchMangaList();
+			}
+		});
+		RequestParams params;
+
+		NameValuePair[] pairs = new BasicNameValuePair[4];
+		pairs[0] = new BasicNameValuePair("manga_id", dialog.getMangaID().toString());
+		pairs[1] = new BasicNameValuePair("dur", "");
+
+		if (dialog.chapterNeedsUpdate()) {
+			// Update Chapter
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getChapter().toString());
+			pairs[3] = new BasicNameValuePair("utype", "chap_read");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
+
+		if (dialog.volumeNeedsUpdate()) {
+			// Update Chapter
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getVolume().toString());
+			pairs[3] = new BasicNameValuePair("utype", "vol_read");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
+
+		if (dialog.scoreNeedsUpdate()) {
+			// Update Score
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
+			pairs[3] = new BasicNameValuePair("utype", "score");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
+
+		if (dialog.statusNeedsUpdate()) {
+			// Update Status
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus().toLowerCase());
+			pairs[3] = new BasicNameValuePair("utype", "status");
+			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
+					.clone()));
+			execQueue.add(new Task(params, null));
+		}
+
+		// Run all
+		execQueue.execute();
+	}
+
+	@Override
+	public void onUpdateAnimeDialogPositiveClick(UpdateAnimeDialogFragment dialog) {
 		Log.i(TAG,
 				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ep: %d", dialog.getAnimeID(),
 						dialog.getStatus(), dialog.getScore(), dialog.getEpisode()));
@@ -351,7 +428,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		pairs[0] = new BasicNameValuePair("anime_id", dialog.getAnimeID().toString());
 		pairs[1] = new BasicNameValuePair("dur", "24");
 
-		if (dialog.ProgressNeedsUpdate()) {
+		if (dialog.progressNeedsUpdate()) {
 			// Update Episode
 			pairs[2] = new BasicNameValuePair("updateVar", dialog.getEpisode().toString());
 			pairs[3] = new BasicNameValuePair("utype", "ep_watched");
@@ -360,7 +437,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			execQueue.add(new Task(params, null));
 		}
 
-		if (dialog.ScoreNeedsUpdate()) {
+		if (dialog.scoreNeedsUpdate()) {
 			// Update Score
 			pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
 			pairs[3] = new BasicNameValuePair("utype", "score");
@@ -369,9 +446,9 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			execQueue.add(new Task(params, null));
 		}
 
-		if (dialog.StatusNeedsUpdate()) {
+		if (dialog.statusNeedsUpdate()) {
 			// Update Status
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus());
+			pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus().toLowerCase());
 			pairs[3] = new BasicNameValuePair("utype", "status");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
@@ -387,7 +464,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	private void fetchAvatar(boolean useCached) {
-		new FetchBitmap(MainActivity.this, "http://img.anilist.co/user/sml/" + userID + ".jpg",
+		new FetchBitmap(MainActivity.this, "http://img.anilist.co/user/sml/" + getUserID() + ".jpg",
 				new OnBitmapResultListener() {
 					@Override
 					public void onBitmapResult(Bitmap bm) {
@@ -399,7 +476,21 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	public void fetchAnimeList() {
 		AnimeListFragment animeFrag = (AnimeListFragment) getSupportFragmentManager().findFragmentByTag("anime");
 		if (animeFrag != null && animeFrag.isVisible()) {
-			animeFrag.fetchAnimeList();
+			animeFrag.fetchList();
 		}
+	}
+
+	public void fetchMangaList() {
+		MangaListFragment mangaFrag = (MangaListFragment) getSupportFragmentManager().findFragmentByTag("manga");
+		if (mangaFrag != null && mangaFrag.isVisible()) {
+			mangaFrag.fetchList();
+		}
+	}
+
+	/**
+	 * @return the userID
+	 */
+	public Integer getUserID() {
+		return userID;
 	}
 }

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.bls220.anilist;
+package com.bls220.anilist.anime;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -20,22 +20,24 @@ import android.widget.RatingBar;
 import android.widget.RatingBar.OnRatingBarChangeListener;
 import android.widget.Spinner;
 
+import com.bls220.anilist.R;
+
 /**
  * @author bsmith
  * 
  */
-public class UpdateDialogFragment extends DialogFragment {
+public class UpdateAnimeDialogFragment extends DialogFragment {
 
 	/*
 	 * The activity that creates an instance of this dialog fragment must implement this interface in order to receive
 	 * event callbacks. Each method passes the DialogFragment in case the host needs to query it.
 	 */
-	public interface UpdateDialogListener {
-		public void onUpdateDialogPositiveClick(UpdateDialogFragment dialog);
+	public interface UpdateAnimeDialogListener {
+		public void onUpdateAnimeDialogPositiveClick(UpdateAnimeDialogFragment dialog);
 	}
 
 	// Use this instance of the interface to deliver action events
-	UpdateDialogListener mListener;
+	UpdateAnimeDialogListener mListener;
 	private Integer curEp;
 	private Integer maxEp;
 	private Integer animeID;
@@ -57,21 +59,29 @@ public class UpdateDialogFragment extends DialogFragment {
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		// Get the layout inflater
 		LayoutInflater inflater = getActivity().getLayoutInflater();
-		View view = inflater.inflate(R.layout.dialog_update, null);
+		View view = inflater.inflate(R.layout.dialog_anime_update, null);
 
 		// Setup UI
-		epNumberPicker = (NumberPicker) view.findViewById(R.id.episodeNumberPicker);
-		epNumberPicker.setMaxValue(maxEp >= 0 ? maxEp : 0);
-		epNumberPicker.setMinValue(1);
-		epNumberPicker.setValue(curEp);
+		epNumberPicker = (NumberPicker) view.findViewById(R.id.chapterNumberPicker);
 
-		final Integer startEpVal = curEp;
-		epNumberPicker.setOnValueChangedListener(new OnValueChangeListener() {
-			@Override
-			public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-				epNeedsUpdate = (newVal != startEpVal);
-			}
-		});
+		if (maxEp > 0 && curEp > 0) {
+			final Integer startEpVal = curEp;
+
+			epNumberPicker.setMaxValue(maxEp);
+			epNumberPicker.setMinValue(1);
+			epNumberPicker.setValue(curEp);
+
+			epNumberPicker.setOnValueChangedListener(new OnValueChangeListener() {
+				@Override
+				public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+					epNeedsUpdate = (newVal != startEpVal);
+				}
+			});
+		} else {
+			epNumberPicker.setEnabled(false);
+			epNumberPicker.setMinValue(0);
+			epNumberPicker.setMaxValue(0);
+		}
 
 		scoreBar = (RatingBar) view.findViewById(R.id.scoreRatingBar);
 		scoreBar.setRating(score);
@@ -108,7 +118,7 @@ public class UpdateDialogFragment extends DialogFragment {
 					@Override
 					public void onClick(DialogInterface dialog, int id) {
 						// Send the positive button event back to the host activity
-						mListener.onUpdateDialogPositiveClick(UpdateDialogFragment.this);
+						mListener.onUpdateAnimeDialogPositiveClick(UpdateAnimeDialogFragment.this);
 					}
 				}).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 					@Override
@@ -128,7 +138,7 @@ public class UpdateDialogFragment extends DialogFragment {
 		// Verify that the host activity implements the callback interface
 		try {
 			// Instantiate the UpdateDialogListener so we can send events to the host
-			mListener = (UpdateDialogListener) activity;
+			mListener = (UpdateAnimeDialogListener) activity;
 		} catch (ClassCastException e) {
 			// The activity doesn't implement the interface, throw exception
 			throw new ClassCastException(activity.toString() + " must implement UpdateDialogListener");
@@ -201,15 +211,15 @@ public class UpdateDialogFragment extends DialogFragment {
 		this.status = status;
 	}
 
-	public boolean StatusNeedsUpdate() {
+	public boolean statusNeedsUpdate() {
 		return statusNeedsUpdate;
 	}
 
-	public boolean ScoreNeedsUpdate() {
+	public boolean scoreNeedsUpdate() {
 		return scoreNeedsUpdate;
 	}
 
-	public boolean ProgressNeedsUpdate() {
+	public boolean progressNeedsUpdate() {
 		return epNeedsUpdate;
 	}
 

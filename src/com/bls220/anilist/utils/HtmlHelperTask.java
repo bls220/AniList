@@ -1,4 +1,4 @@
-package com.bls220.anilist;
+package com.bls220.anilist.utils;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;

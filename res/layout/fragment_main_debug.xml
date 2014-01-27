@@ -58,7 +58,7 @@
         android:text="Login" />
 
     <ExpandableListView
-        android:id="@+id/animeListView"
+        android:id="@+id/expandableListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
@@ -80,7 +80,7 @@
         android:id="@+id/imgProfile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/animeListView"
+        android:layout_above="@+id/expandableListView"
         android:layout_below="@+id/editOutput"
         android:layout_toRightOf="@+id/btnClear"
         android:scaleType="fitXY"

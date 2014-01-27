@@ -24,11 +24,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bls220.anilist.AnimeListAdapter.ExpandListChild;
-import com.bls220.anilist.AnimeListAdapter.ExpandListGroup;
-import com.bls220.anilist.FetchBitmap.OnBitmapResultListener;
-import com.bls220.anilist.HtmlHelperTask.OnTaskCompleteListener;
-import com.bls220.anilist.HtmlHelperTask.TaskResults;
+import com.bls220.anilist.anime.AnimeExpandChild;
+import com.bls220.anilist.anime.UpdateAnimeDialogFragment;
+import com.bls220.anilist.utils.FetchBitmap;
+import com.bls220.anilist.utils.FetchBitmap.OnBitmapResultListener;
+import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
+import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
+import com.bls220.expandablelist.ExpandableListAdapter;
+import com.bls220.expandablelist.ExpandableListAdapter.ExpandGroup;
+import com.bls220.expandablelist.ExpandableListAdapter.ExpandListGroup;
 
 /**
  * @author bsmith
@@ -37,7 +41,7 @@ import com.bls220.anilist.HtmlHelperTask.TaskResults;
 public class DebugFragment extends Fragment implements OnChildClickListener {
 
 	TextView editOutput;
-	AnimeListAdapter animeListAdapter;
+	ExpandableListAdapter animeListAdapter;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -65,7 +69,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			@Override
 			public void onClick(View v) {
 				FetchBitmap task = new FetchBitmap(getActivity(), "http://img.anilist.co/user/sml/"
-						+ ((MainActivity) getActivity()).userID + ".jpg", new OnBitmapResultListener() {
+						+ ((MainActivity) getActivity()).getUserID() + ".jpg", new OnBitmapResultListener() {
 
 					@Override
 					public void onBitmapResult(Bitmap bm) {
@@ -76,9 +80,9 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			}
 		});
 
-		ExpandableListView animeList = (ExpandableListView) rootView.findViewById(R.id.animeListView);
-		animeListAdapter = new AnimeListAdapter(getActivity());
-		animeListAdapter.addItem(new ExpandListChild("Dummy Child", -1, "7.25", 7, 12, "On Hold"), new ExpandListGroup(
+		ExpandableListView animeList = (ExpandableListView) rootView.findViewById(R.id.expandableListView);
+		animeListAdapter = new ExpandableListAdapter(getActivity());
+		animeListAdapter.addItem(new AnimeExpandChild("Dummy Child", -1, "7.25", 7, 12, "On Hold"), new ExpandGroup(
 				"Dummy Group"));
 		animeList.setAdapter(animeListAdapter);
 		animeList.setOnChildClickListener(this);
@@ -123,7 +127,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			Toast.makeText(activity, "Anime List Test", Toast.LENGTH_SHORT).show();
 			// Fetch anime page
 			// Set userID for debug
-			activity.requestPage("/animelist/" + activity.userID, false, null, this);
+			activity.requestPage("/animelist/" + activity.getUserID(), false, null, this);
 		}
 
 		@Override
@@ -146,7 +150,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			Elements lists = allLists.getElementsByClass("list");
 
 			for (int i = 0; i < listHeaders.size(); i++) {
-				ExpandListGroup group = new ExpandListGroup(listHeaders.get(i).text());
+				ExpandListGroup group = new ExpandGroup(listHeaders.get(i).text());
 				// Create children entries
 				Elements list = lists.get(i).getElementsByClass("rtitle");
 				for (Element entry : list) {
@@ -167,7 +171,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 					Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
 					Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
 
-					animeListAdapter.addItem(new ExpandListChild(String.format("%s", name, id), Integer.parseInt(id),
+					animeListAdapter.addItem(new AnimeExpandChild(String.format("%s", name, id), Integer.parseInt(id),
 							score, curEp, totEp, listHeaders.get(i).text()), group);
 				}
 			}
@@ -179,13 +183,13 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 
 	@Override
 	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-		ExpandListChild child = (ExpandListChild) v.getTag();
+		AnimeExpandChild child = (AnimeExpandChild) v.getTag();
 		Toast.makeText(
 				v.getContext(),
 				String.format("%s %1.2f %s %s", child.getName(), child.getScore(), child.getEpisodeProgress(),
 						child.getStatus()), Toast.LENGTH_SHORT).show();
 		// Show update Dialog
-		UpdateDialogFragment dialog = new UpdateDialogFragment();
+		UpdateAnimeDialogFragment dialog = new UpdateAnimeDialogFragment();
 		// get episode info from child
 		dialog.setMaxEpisodes(child.getMaxEpisode());
 		dialog.setEpisode(child.getEpisode());
