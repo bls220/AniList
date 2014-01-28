@@ -17,21 +17,29 @@ import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SearchView.OnCloseListener;
+import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,6 +63,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		UpdateMangaDialogListener {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
+
+	protected static final String SEARCH_TYPE = "type";
 
 	private Integer userID = 0;
 	String userName = "";
@@ -117,6 +127,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		if (savedInstanceState == null) {
 			selectItem(1);
 		}
+
 	}
 
 	@TargetApi(14)
@@ -148,6 +159,59 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main, menu);
+
+		final Spinner testSpinner = new Spinner(this);
+		final float spinnerWeight = 0.2f;
+		testSpinner.setAdapter(new ArrayAdapter<String>(this, R.layout.search_type_list_item, getResources()
+				.getStringArray(R.array.search_types_array)));
+		testSpinner.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, spinnerWeight));
+
+		final SearchView search = (SearchView) menu.findItem(R.id.menu_search).getActionView();
+		search.setOnSearchClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				search.setWeightSum(1f);
+				Integer count = search.getChildCount();
+				Log.d(TAG, count.toString());
+				for (int i = 0; i < count; i++) {
+					LayoutParams params = (LayoutParams) search.getChildAt(i).getLayoutParams();
+					params.width = 0;
+					params.weight = (1f - spinnerWeight) / count;
+				}
+				search.addView(testSpinner);
+				search.refreshDrawableState();
+			}
+		});
+
+		search.setOnCloseListener(new OnCloseListener() {
+			@Override
+			public boolean onClose() {
+				search.removeView(testSpinner);
+				return false;
+			}
+		});
+
+		search.setOnQueryTextListener(new OnQueryTextListener() {
+
+			@Override
+			public boolean onQueryTextSubmit(String query) {
+				Toast.makeText(MainActivity.this, "Query Submitted", Toast.LENGTH_SHORT).show();
+
+				ResultFragment fragment = ResultFragment.newInstance("", "");
+
+				FragmentManager man = getSupportFragmentManager();
+				FragmentTransaction ft = man.beginTransaction().replace(R.id.content_frame, fragment);
+				ft.addToBackStack(null);
+				ft.commit();
+				return false;
+			}
+
+			@Override
+			public boolean onQueryTextChange(String text) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -168,6 +232,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		}
 		// Handle action buttons
 		switch (item.getItemId()) {
+		case R.id.menu_search:
+			Toast.makeText(MainActivity.this, "Search selected", Toast.LENGTH_SHORT).show();
 		default:
 			return super.onOptionsItemSelected(item);
 		}

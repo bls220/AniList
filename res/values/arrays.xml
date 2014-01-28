@@ -16,6 +16,11 @@
         <item>Dropped</item>
     </string-array>
     
+    <string-array name="search_types_array">
+        <item>Anime</item>
+        <item>Manga</item>
+    </string-array>
+    
     <string-array name="drawer_items_array">
         <item>Anime List</item>
         <item>Manga List</item>

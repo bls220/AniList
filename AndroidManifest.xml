@@ -23,19 +23,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name="com.bls220.anilist.ItemListActivity"
-            android:label="@string/title_item_list" >
-        </activity>
-        <activity
-            android:name="com.bls220.anilist.ItemDetailActivity"
-            android:label="@string/title_item_detail"
-            android:parentActivityName=".ItemListActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ItemListActivity" />
-        </activity>
+        </activity>	
     </application>
 
 </manifest>
