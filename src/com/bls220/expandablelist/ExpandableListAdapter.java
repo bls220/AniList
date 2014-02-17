@@ -38,15 +38,13 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		View inflate(LayoutInflater inflater);
 	}
 
-	private final Context context;
 	private final ArrayList<ExpandListGroup> groups;
 
-	public ExpandableListAdapter(Context context) {
-		this(context, null);
+	public ExpandableListAdapter() {
+		this(null);
 	}
 
-	public ExpandableListAdapter(Context context, ArrayList<ExpandListGroup> groups) {
-		this.context = context;
+	public ExpandableListAdapter(ArrayList<ExpandListGroup> groups) {
 		if (groups == null) {
 			this.groups = new ArrayList<ExpandListGroup>();
 		} else {
@@ -88,7 +86,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 	public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View view, ViewGroup parent) {
 		final ExpandListChild child = (ExpandListChild) getChild(groupPosition, childPosition);
 		if (view == null) {
-			LayoutInflater inf = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			LayoutInflater inf = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			view = child.inflate(inf);
 		}
 		child.setupView(view);
@@ -124,7 +122,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 	public View getGroupView(int groupPosition, boolean isLastChild, View view, ViewGroup parent) {
 		ExpandListGroup group = (ExpandListGroup) getGroup(groupPosition);
 		if (view == null) {
-			LayoutInflater inf = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			LayoutInflater inf = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			view = group.inflate(inf);
 		}
 		group.setupView(view);
@@ -148,6 +146,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 		public ExpandGroup(String name) {
 			this.Name = name;
+			Items = new ArrayList<ExpandableListAdapter.ExpandListChild>();
 		}
 
 		@Override
@@ -180,4 +179,23 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 	}
 
+	public static class ExpandChid implements ExpandListChild {
+
+		private final String mText;
+
+		public ExpandChid(String text) {
+			mText = text;
+		}
+
+		@Override
+		public void setupView(View v) {
+			((TextView) v.findViewById(android.R.id.text1)).setText(mText);
+		}
+
+		@Override
+		public View inflate(LayoutInflater inflater) {
+			return inflater.inflate(android.R.layout.simple_list_item_1, null);
+		}
+
+	}
 }

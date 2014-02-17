@@ -64,11 +64,11 @@ public class UpdateAnimeDialogFragment extends DialogFragment {
 		// Setup UI
 		epNumberPicker = (NumberPicker) view.findViewById(R.id.chapterNumberPicker);
 
-		if (maxEp > 0 && curEp > 0) {
+		if (maxEp > 0 && curEp >= 0) {
 			final Integer startEpVal = curEp;
 
 			epNumberPicker.setMaxValue(maxEp);
-			epNumberPicker.setMinValue(1);
+			epNumberPicker.setMinValue(0);
 			epNumberPicker.setValue(curEp);
 
 			epNumberPicker.setOnValueChangedListener(new OnValueChangeListener() {

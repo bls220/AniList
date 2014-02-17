@@ -1,8 +1,20 @@
 package com.bls220.anilist;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +23,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bls220.anilist.dummy.DummyContent;
+import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
+import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
+import com.bls220.anilist.utils.Utils;
 
 /**
  * A fragment representing a list of Items.
@@ -21,16 +37,17 @@ import com.bls220.anilist.dummy.DummyContent;
  * <p />
  * Activities containing this fragment MUST implement the {@link Callbacks} interface.
  */
-public class ResultFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class ResultFragment extends Fragment implements AbsListView.OnItemClickListener, OnTaskCompleteListener {
 
 	// TODO: Rename parameter arguments, choose names that match
 	// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-	private static final String ARG_PARAM1 = "param1";
-	private static final String ARG_PARAM2 = "param2";
+	public static final String ARG_QUERY = "query";
+	public static final String ARG_QUERY_TYPE = "query_type";
+	private static final String TAG = ResultFragment.class.getSimpleName();
 
 	// TODO: Rename and change types of parameters
-	private String mParam1;
-	private String mParam2;
+	private String mQuery;
+	private String mType;
 
 	private OnFragmentInteractionListener mListener;
 
@@ -45,11 +62,11 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	private ListAdapter mAdapter;
 
 	// TODO: Rename and change types of parameters
-	public static ResultFragment newInstance(String param1, String param2) {
+	public static ResultFragment newInstance(String query, String type) {
 		ResultFragment fragment = new ResultFragment();
 		Bundle args = new Bundle();
-		args.putString(ARG_PARAM1, param1);
-		args.putString(ARG_PARAM2, param2);
+		args.putString(ARG_QUERY, query);
+		args.putString(ARG_QUERY_TYPE, type);
 		fragment.setArguments(args);
 		return fragment;
 	}
@@ -66,13 +83,17 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
-			mParam1 = getArguments().getString(ARG_PARAM1);
-			mParam2 = getArguments().getString(ARG_PARAM2);
-		}
+			mQuery = getArguments().getString(ARG_QUERY);
+			mType = getArguments().getString(ARG_QUERY_TYPE).toLowerCase();
+			Toast.makeText(getActivity(), String.format("%s \t %s", mType, mQuery), Toast.LENGTH_SHORT).show();
 
-		// TODO: Change Adapter to display your content
-		mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(), android.R.layout.simple_list_item_1,
-				android.R.id.text1, DummyContent.ITEMS);
+			// Start Search
+
+			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			params.add(new BasicNameValuePair("q", mQuery));
+			params.add(new BasicNameValuePair("type", mType));
+			Utils.requestPage(getActivity(), "/getSearch.php", false, params, this);
+		}
 	}
 
 	@Override
@@ -137,6 +158,24 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	public interface OnFragmentInteractionListener {
 		// TODO: Update argument type and name
 		public void onFragmentInteraction(String id);
+	}
+
+	@Override
+	public void onTaskComplete(TaskResults results) {
+		// Get results
+		Document doc = Jsoup.parse(results.output);
+		Elements links = doc.select("a[href]");
+		ArrayList<String> vals = new ArrayList<String>();
+		ListIterator<Element> itr = links.listIterator();
+		while (itr.hasNext()) {
+			Element result = itr.next();
+			String name = result.text();
+			vals.add(name);
+			Log.d(TAG, "Found: " + name);
+		}
+		mAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1,
+				vals);
+		mListView.setAdapter(mAdapter);
 	}
 
 }

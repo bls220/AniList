@@ -81,7 +81,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 		});
 
 		ExpandableListView animeList = (ExpandableListView) rootView.findViewById(R.id.expandableListView);
-		animeListAdapter = new ExpandableListAdapter(getActivity());
+		animeListAdapter = new ExpandableListAdapter();
 		animeListAdapter.addItem(new AnimeExpandChild("Dummy Child", -1, "7.25", 7, 12, "On Hold"), new ExpandGroup(
 				"Dummy Group"));
 		animeList.setAdapter(animeListAdapter);

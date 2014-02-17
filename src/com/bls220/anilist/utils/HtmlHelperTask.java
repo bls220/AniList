@@ -26,7 +26,6 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -37,7 +36,6 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 
 	private final Activity mActivity;
 	private final OnTaskCompleteListener mListener;
-	private ProgressDialog mProgress;
 
 	private static BasicHttpContext httpContext;
 
@@ -48,7 +46,7 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 	}
 
 	public static interface OnTaskCompleteListener {
-		public void onTaskComplete(TaskResults results);
+		void onTaskComplete(TaskResults results);
 	}
 
 	public static class RequestParams {
@@ -83,12 +81,6 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 	protected void onPreExecute() {
 		Log.v(TAG, "Task started.");
 		mActivity.setProgressBarIndeterminateVisibility(true);
-		// mProgress = new ProgressDialog(mActivity);
-		// mProgress.setTitle("Fetching...");
-		// mProgress.setMessage("Please wait.");
-		// mProgress.setCancelable(false);
-		// mProgress.setIndeterminate(true);
-		// mProgress.show();
 	}
 
 	@Override
@@ -161,7 +153,6 @@ public class HtmlHelperTask extends AsyncTask<HtmlHelperTask.RequestParams, Void
 
 		// Cleanup
 		mActivity.setProgressBarIndeterminateVisibility(false);
-		// mProgress.dismiss();
 
 		Log.v(TAG, "Task Complete.");
 		// Return

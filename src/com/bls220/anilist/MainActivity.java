@@ -149,7 +149,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			userID = savedInstanceState.getInt("userID");
 			userName = savedInstanceState.getString("userName");
 			if (!userName.isEmpty()) {
-				((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
+				((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(userName);
 			}
 			fetchAvatar();
 		}
@@ -195,12 +195,9 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 			@Override
 			public boolean onQueryTextSubmit(String query) {
-				Toast.makeText(MainActivity.this, "Query Submitted", Toast.LENGTH_SHORT).show();
-
-				ResultFragment fragment = ResultFragment.newInstance("", "");
-
-				FragmentManager man = getSupportFragmentManager();
-				FragmentTransaction ft = man.beginTransaction().replace(R.id.content_frame, fragment);
+				ResultFragment fragment = ResultFragment.newInstance(query, (String) testSpinner.getSelectedItem());
+				FragmentTransaction ft = getSupportFragmentManager().beginTransaction().replace(R.id.content_frame,
+						fragment);
 				ft.addToBackStack(null);
 				ft.commit();
 				return false;
@@ -393,7 +390,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 						fetchMangaList();
 						// Get avatar and info
 						userName = doc.getElementsByTag("header").select("h1").text();
-						((TextView) mDrawerHeader.findViewById(R.id.textView1)).setText(userName);
+						((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(userName);
 						// Use cached and then update file
 						fetchAvatar();
 						fetchAvatar(false);
@@ -534,7 +531,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 				new OnBitmapResultListener() {
 					@Override
 					public void onBitmapResult(Bitmap bm) {
-						((ImageView) mDrawerHeader.findViewById(R.id.imageView1)).setImageBitmap(bm);
+						((ImageView) mDrawerHeader.findViewById(R.id.imgCover)).setImageBitmap(bm);
 					}
 				}, useCached).execute();
 	}
