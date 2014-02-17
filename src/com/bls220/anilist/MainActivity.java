@@ -2,7 +2,6 @@ package com.bls220.anilist;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -44,6 +43,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
+import com.bls220.anilist.ResultFragment.OnResultClickListener;
 import com.bls220.anilist.anime.AnimeListFragment;
 import com.bls220.anilist.anime.UpdateAnimeDialogFragment;
 import com.bls220.anilist.anime.UpdateAnimeDialogFragment.UpdateAnimeDialogListener;
@@ -54,13 +54,13 @@ import com.bls220.anilist.utils.ExecuteHtmlTaskQueue;
 import com.bls220.anilist.utils.ExecuteHtmlTaskQueue.Task;
 import com.bls220.anilist.utils.FetchBitmap;
 import com.bls220.anilist.utils.FetchBitmap.OnBitmapResultListener;
-import com.bls220.anilist.utils.HtmlHelperTask;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
+import com.bls220.anilist.utils.Utils;
 
 public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateAnimeDialogListener,
-		UpdateMangaDialogListener {
+		OnResultClickListener, UpdateMangaDialogListener {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -286,17 +286,21 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			break;
 		}
 
-		if (fragment != null) {
-			FragmentManager fragmentManager = getSupportFragmentManager();
-			fragment.setArguments(args);
-			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, tag).commit();
-		}
+		replaceContent(fragment, args, tag);
 
 		// update selected item and title, then close the drawer
 		mDrawerList.setItemChecked(position, true);
 		if (updateTitle)
 			setTitle(mDrawerTitles[position - 1]);
 		mDrawerLayout.closeDrawer(mDrawerList);
+	}
+
+	private void replaceContent(Fragment fragment, Bundle args, String tag) {
+		if (fragment != null) {
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragment.setArguments(args);
+			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, tag).commit();
+		}
 	}
 
 	@Override
@@ -342,15 +346,6 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			dummyTextView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
 			return rootView;
 		}
-	}
-
-	public void requestPage(String path, Boolean doPost, List<NameValuePair> paramPairs, OnTaskCompleteListener listener) {
-		if (paramPairs == null) {
-			paramPairs = new ArrayList<NameValuePair>();
-		}
-		HtmlHelperTask task = new HtmlHelperTask(this, listener);
-		RequestParams params = new RequestParams(getString(R.string.baseURL).concat(path), doPost, paramPairs);
-		task.execute(params);
 	}
 
 	@Override
@@ -406,7 +401,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 				Toast.makeText(getBaseContext(), "Login Failed", Toast.LENGTH_LONG).show();
 			}
 		};
-		requestPage("/login.php", true, params, loginListener);
+		Utils.requestPage(this, "/login.php", true, params, loginListener);
 	}
 
 	@Override
@@ -555,5 +550,14 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	 */
 	public Integer getUserID() {
 		return userID;
+	}
+
+	@Override
+	public void onRequestInfoPage(int id) {
+		Toast.makeText(this, "Requesting info on result ID: " + id, Toast.LENGTH_SHORT).show();
+		InfoFragment fragment = new InfoFragment();
+		FragmentTransaction ft = getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment);
+		ft.addToBackStack(null);
+		ft.commit();
 	}
 }

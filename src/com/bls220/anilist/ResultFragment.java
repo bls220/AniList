@@ -25,7 +25,6 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bls220.anilist.dummy.DummyContent;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.utils.Utils;
@@ -49,7 +48,7 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	private String mQuery;
 	private String mType;
 
-	private OnFragmentInteractionListener mListener;
+	private OnResultClickListener mListener;
 
 	/**
 	 * The fragment's ListView/GridView.
@@ -103,7 +102,6 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 		// Set the adapter
 		mListView = (AbsListView) view.findViewById(android.R.id.list);
 		((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
-
 		// Set OnItemClickListener so we can be notified on item clicks
 		mListView.setOnItemClickListener(this);
 
@@ -114,9 +112,9 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		try {
-			// mListener = (OnFragmentInteractionListener) activity;
+			mListener = (OnResultClickListener) activity;
 		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString() + " must implement OnFragmentInteractionListener");
+			throw new ClassCastException(activity.toString() + " must implement OnResultClickListener");
 		}
 	}
 
@@ -131,7 +129,7 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 		if (null != mListener) {
 			// Notify the active callbacks interface (the activity, if the
 			// fragment is attached to one) that an item has been selected.
-			mListener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
+			mListener.onRequestInfoPage(((ResultHolder) parent.getAdapter().getItem(position)).id);
 		}
 	}
 
@@ -147,6 +145,26 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 		}
 	}
 
+	@Override
+	public void onTaskComplete(TaskResults results) {
+		// Get results
+		Document doc = Jsoup.parse(results.output);
+		Elements links = doc.select("a[href]");
+		ArrayList<ResultHolder> vals = new ArrayList<ResultHolder>();
+		ListIterator<Element> itr = links.listIterator();
+		while (itr.hasNext()) {
+			Element result = itr.next();
+			String name = result.text();
+			String id = result.attr("href");
+			id = id.substring(7);
+			vals.add(new ResultHolder(name, Integer.parseInt(id)));
+			Log.d(TAG, "Found: " + name);
+		}
+		mAdapter = new ArrayAdapter<ResultHolder>(getActivity(), android.R.layout.simple_list_item_1,
+				android.R.id.text1, vals);
+		mListView.setAdapter(mAdapter);
+	}
+
 	/**
 	 * This interface must be implemented by activities that contain this fragment to allow an interaction in this
 	 * fragment to be communicated to the activity and potentially other fragments contained in that activity.
@@ -155,27 +173,23 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	 * "http://developer.android.com/training/basics/fragments/communicating.html" >Communicating with Other
 	 * Fragments</a> for more information.
 	 */
-	public interface OnFragmentInteractionListener {
+	public interface OnResultClickListener {
 		// TODO: Update argument type and name
-		public void onFragmentInteraction(String id);
+		public void onRequestInfoPage(int id);
 	}
 
-	@Override
-	public void onTaskComplete(TaskResults results) {
-		// Get results
-		Document doc = Jsoup.parse(results.output);
-		Elements links = doc.select("a[href]");
-		ArrayList<String> vals = new ArrayList<String>();
-		ListIterator<Element> itr = links.listIterator();
-		while (itr.hasNext()) {
-			Element result = itr.next();
-			String name = result.text();
-			vals.add(name);
-			Log.d(TAG, "Found: " + name);
+	private static class ResultHolder {
+		String title;
+		Integer id;
+
+		ResultHolder(String _title, Integer _id) {
+			title = _title;
+			id = _id;
 		}
-		mAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1,
-				vals);
-		mListView.setAdapter(mAdapter);
-	}
 
+		@Override
+		public String toString() {
+			return title;
+		}
+	}
 }

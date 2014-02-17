@@ -30,6 +30,7 @@ import com.bls220.anilist.utils.FetchBitmap;
 import com.bls220.anilist.utils.FetchBitmap.OnBitmapResultListener;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
+import com.bls220.anilist.utils.Utils;
 import com.bls220.expandablelist.ExpandableListAdapter;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandGroup;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandListGroup;
@@ -94,7 +95,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 		@Override
 		public void onClick(View v) {
 			Toast.makeText(getActivity(), "Basic Test", Toast.LENGTH_SHORT).show();
-			((MainActivity) getActivity()).requestPage("", false, null, this);
+			Utils.requestPage(getActivity(), "", false, null, this);
 		}
 
 		@Override
@@ -127,7 +128,7 @@ public class DebugFragment extends Fragment implements OnChildClickListener {
 			Toast.makeText(activity, "Anime List Test", Toast.LENGTH_SHORT).show();
 			// Fetch anime page
 			// Set userID for debug
-			activity.requestPage("/animelist/" + activity.getUserID(), false, null, this);
+			Utils.requestPage(activity, "/animelist/" + activity.getUserID(), false, null, this);
 		}
 
 		@Override
