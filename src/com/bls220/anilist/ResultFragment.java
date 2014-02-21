@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
@@ -82,6 +83,7 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
+			setRetainInstance(true);
 			mQuery = getArguments().getString(ARG_QUERY);
 			mType = getArguments().getString(ARG_QUERY_TYPE).toLowerCase();
 			Toast.makeText(getActivity(), String.format("%s \t %s", mType, mQuery), Toast.LENGTH_SHORT).show();
@@ -129,7 +131,7 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 		if (null != mListener) {
 			// Notify the active callbacks interface (the activity, if the
 			// fragment is attached to one) that an item has been selected.
-			mListener.onRequestInfoPage(((ResultHolder) parent.getAdapter().getItem(position)).id);
+			mListener.onRequestInfoPage(((ResultHolder) parent.getAdapter().getItem(position)).id, mType);
 		}
 	}
 
@@ -147,6 +149,14 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 
 	@Override
 	public void onTaskComplete(TaskResults results) {
+		if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
+				&& results.status.getStatusCode() != HttpStatus.SC_OK) {
+			Toast.makeText(getActivity(),
+					String.format("Error: [%d] %s", results.status.getStatusCode(), results.status.getReasonPhrase()),
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+
 		// Get results
 		Document doc = Jsoup.parse(results.output);
 		Elements links = doc.select("a[href]");
@@ -158,7 +168,7 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 			String id = result.attr("href");
 			id = id.substring(7);
 			vals.add(new ResultHolder(name, Integer.parseInt(id)));
-			Log.d(TAG, "Found: " + name);
+			Log.d(TAG, String.format("Found %s(%s)", name, id));
 		}
 		mAdapter = new ArrayAdapter<ResultHolder>(getActivity(), android.R.layout.simple_list_item_1,
 				android.R.id.text1, vals);
@@ -175,7 +185,7 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	 */
 	public interface OnResultClickListener {
 		// TODO: Update argument type and name
-		public void onRequestInfoPage(int id);
+		public void onRequestInfoPage(int id, String type);
 	}
 
 	private static class ResultHolder {

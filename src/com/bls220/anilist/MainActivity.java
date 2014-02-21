@@ -42,6 +42,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bls220.anilist.InfoFragment.EINFO_TYPE;
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
 import com.bls220.anilist.ResultFragment.OnResultClickListener;
 import com.bls220.anilist.anime.AnimeListFragment;
@@ -526,7 +527,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 				new OnBitmapResultListener() {
 					@Override
 					public void onBitmapResult(Bitmap bm) {
-						((ImageView) mDrawerHeader.findViewById(R.id.imgCover)).setImageBitmap(bm);
+						((ImageView) mDrawerHeader.findViewById(R.id.imgPoster)).setImageBitmap(bm);
 					}
 				}, useCached).execute();
 	}
@@ -553,9 +554,9 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	@Override
-	public void onRequestInfoPage(int id) {
+	public void onRequestInfoPage(int id, String type) {
 		Toast.makeText(this, "Requesting info on result ID: " + id, Toast.LENGTH_SHORT).show();
-		InfoFragment fragment = new InfoFragment();
+		InfoFragment fragment = InfoFragment.newInstance(Enum.valueOf(EINFO_TYPE.class, type.toUpperCase()), id);
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment);
 		ft.addToBackStack(null);
 		ft.commit();
