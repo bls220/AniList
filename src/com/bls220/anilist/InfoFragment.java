@@ -11,13 +11,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,6 +46,7 @@ public class InfoFragment extends Fragment implements OnTaskCompleteListener {
 
 	private TextView txtTitle;
 	private TextView txtDescription;
+	private TextView txtStats;
 	private ImageView imgPoster;
 
 	public InfoFragment() {
@@ -93,22 +93,23 @@ public class InfoFragment extends Fragment implements OnTaskCompleteListener {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_info, container, false);
 		txtTitle = (TextView) view.findViewById(R.id.txtTitle);
+		txtStats = (TextView) view.findViewById(R.id.txtStats);
+		txtStats.setMovementMethod(new ScrollingMovementMethod());
 		txtDescription = (TextView) view.findViewById(R.id.txtDescription);
-		txtDescription.setMovementMethod(new ScrollingMovementMethod());
-		// Hack to allow scrolling inside of scrollview
-		txtDescription.setOnTouchListener(new OnTouchListener() {
-			@Override
-			public boolean onTouch(View v, MotionEvent ev) {
-				if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-					v.getParent().requestDisallowInterceptTouchEvent(true);
-				}
-				if (ev.getAction() == MotionEvent.ACTION_UP) {
-					v.getParent().requestDisallowInterceptTouchEvent(false);
-				}
-
-				return v.onTouchEvent(ev);
-			}
-		});
+		// // Hack to allow scrolling inside of scrollview
+		// txtDescription.setOnTouchListener(new OnTouchListener() {
+		// @Override
+		// public boolean onTouch(View v, MotionEvent ev) {
+		// if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+		// v.getParent().requestDisallowInterceptTouchEvent(true);
+		// }
+		// if (ev.getAction() == MotionEvent.ACTION_UP) {
+		// v.getParent().requestDisallowInterceptTouchEvent(false);
+		// }
+		//
+		// return v.onTouchEvent(ev);
+		// }
+		// });
 		imgPoster = (ImageView) view.findViewById(R.id.imgPoster);
 		return view;
 	}
@@ -127,12 +128,6 @@ public class InfoFragment extends Fragment implements OnTaskCompleteListener {
 		// Get header
 		Element header = doc.getElementsByClass("animeHeader").get(0); // Should only be one
 		Elements animeDes = header.select("div#animeDes");
-		// Extract/Set title
-		String title = animeDes.select("h1").text();
-		txtTitle.setText(title);
-		// Extract/Set Description
-		String description = animeDes.text();
-		txtDescription.setText(description);
 		// Extract Poster url
 		String posterSrc = getActivity().getString(R.string.baseURL) + header.select("img.poster").attr("src");
 		// Fetch Poster Image
@@ -144,7 +139,24 @@ public class InfoFragment extends Fragment implements OnTaskCompleteListener {
 				}
 			}
 		}).execute();
-		Toast.makeText(getActivity(), posterSrc, Toast.LENGTH_LONG).show();
+		// Extract/Set title
+		String title = animeDes.select("h1").text();
+		txtTitle.setText(title);
+		// Extract/Set Description
+		String description = animeDes.text();
+		txtDescription.setText(description);
+		// Get Stats
+		Element animeData = doc.getElementById("animeInfo").getElementsByClass("series_left_data").first();
+		// Set Stats
+		txtStats.setText("");
+		txtStats.setTypeface(Typeface.MONOSPACE);
+		Elements items = animeData.select("li");
+		for (Element item : items) {
+			Element type = item.getElementsByClass("type").first();
+			Element value = item.getElementsByClass("value").first();
+			value.select("br").append("br2n");
+			txtStats.append(String.format("%-14s %s\n", type.text(),
+					value.text().replaceAll("br2n", String.format("\n%-14s ", "")).trim()));
+		}
 	}
-
 }
