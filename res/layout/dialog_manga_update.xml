@@ -40,25 +40,14 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <RatingBar
-        android:id="@+id/scoreRatingBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView3"
-        android:layout_centerHorizontal="true"
-        android:isIndicator="false"
-        android:max="10"
-        android:numStars="5"
-        android:stepSize="0.125" />
-
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:gravity="center" 
-        android:layout_below="@+id/linearLayout1" >
+        android:layout_below="@+id/linearLayout1"
+        android:gravity="center" >
 
         <TextView
             android:id="@+id/txtDescription"
@@ -82,5 +71,16 @@
         android:layout_below="@+id/linearLayout2"
         android:layout_centerHorizontal="true"
         android:text="Score:" />
+
+    <RatingBar
+        android:id="@+id/scoreRatingBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView3"
+        android:layout_centerHorizontal="true"
+        android:isIndicator="false"
+        android:max="10"
+        android:numStars="5"
+        android:stepSize="0.125" />
 
 </RelativeLayout>

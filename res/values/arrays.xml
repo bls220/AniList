@@ -24,6 +24,5 @@
     <string-array name="drawer_items_array">
         <item>Anime List</item>
         <item>Manga List</item>
-<!--         <item>Debug</item> -->
     </string-array>
 </resources>

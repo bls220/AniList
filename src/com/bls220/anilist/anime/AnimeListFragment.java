@@ -4,19 +4,24 @@
 package com.bls220.anilist.anime;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
-import android.widget.Toast;
 
 import com.bls220.anilist.AniListFragment;
+import com.bls220.anilist.MainActivity;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandGroup;
+import com.bls220.expandablelist.ExpandableListAdapter.ExpandListChild;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandListGroup;
+import com.bls220.temp.AniEntry;
+import com.bls220.temp.AniList;
 
 /**
  * @author bsmith
@@ -27,25 +32,29 @@ public class AnimeListFragment extends AniListFragment {
 	@Override
 	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 		AnimeExpandChild child = (AnimeExpandChild) v.getTag();
-		Toast.makeText(
-				v.getContext(),
-				String.format("%s %1.2f %s %s", child.getName(), child.getScore(), child.getEpisodeProgress(),
-						child.getStatus()), Toast.LENGTH_SHORT).show();
+		AniEntry entry = child.getEntry();
+
+		Log.v(TAG, String.format("Preparing to update %s (%d)\n" +
+				"\t Episodes: %s\n" +
+				"\t Score:    %f\n" +
+				"\t Status:   %s",
+				entry.getTitle(), entry.getID(), entry.getProgressString(), entry.getScore(), entry.getStatus()));
+
 		// Show update Dialog
 		UpdateAnimeDialogFragment dialog = new UpdateAnimeDialogFragment();
 		// get episode info from child
-		dialog.setMaxEpisodes(child.getMaxEpisode());
-		dialog.setEpisode(child.getEpisode());
-		dialog.setAnimeID(child.getAnimeID());
-		dialog.setScore(child.getScore());
-		dialog.setStatus(child.getStatus());
+		dialog.setMaxEpisodes(entry.getMax());
+		dialog.setEpisode(entry.getCurrent());
+		dialog.setAnimeID(entry.getID());
+		dialog.setScore(entry.getScore());
+		dialog.setStatus(entry.getStatus());
 		dialog.show(getFragmentManager(), "update");
 		return true;
 	}
 
 	@Override
 	protected ArrayList<ExpandListGroup> processHTML(String html) {
-		ArrayList<ExpandListGroup> groups = new ArrayList<ExpandListGroup>(3);
+		AniList<AniEntry> animeLists = ((MainActivity) getActivity()).getUser().getAnimeLists();
 
 		Document doc = Jsoup.parse(html);
 		// Get All lists
@@ -55,8 +64,10 @@ public class AnimeListFragment extends AniListFragment {
 		// Get Lists
 		Elements lists = allLists.getElementsByClass("list");
 
+		// Clear all groups in anime lists
+		animeLists.removeAllGroups();
 		for (int i = 0; i < listHeaders.size(); i++) {
-			ExpandGroup group = new ExpandGroup(listHeaders.get(i).text());
+			String title = listHeaders.get(i).text();
 			// Create children entries
 			Elements list = lists.get(i).getElementsByClass("rtitle");
 			for (Element entry : list) {
@@ -77,10 +88,25 @@ public class AnimeListFragment extends AniListFragment {
 				Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
 				Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
 
-				group.getItems().add(
-						new AnimeExpandChild(String.format("%s", name, id), Integer.parseInt(id), score, curEp, totEp,
-								group.getName()));
+				Integer animeID = Integer.parseInt(id);
+				animeLists.addToGroup(title, new AniEntry(String.format("%s", name, id),
+						animeID,
+						score,
+						curEp,
+						totEp,
+						title // TODO: fix for custom lists
+						));
 			}
+		}
+		ArrayList<ExpandListGroup> groups = new ArrayList<ExpandListGroup>(3);
+		List<String> animeGroups = animeLists.getGroups();
+		for (String title : animeGroups) {
+			ExpandGroup group = new ExpandGroup(title);
+			ArrayList<ExpandListChild> children = new ArrayList<ExpandListChild>();
+			for (AniEntry entry : animeLists.getGroupAsList(title)) {
+				children.add(new AnimeExpandChild(entry));
+			}
+			group.setItems(children);
 			groups.add(group);
 		}
 		return groups;

@@ -59,6 +59,7 @@ import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.utils.Utils;
+import com.bls220.temp.User;
 
 public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateAnimeDialogListener,
 		OnResultClickListener, UpdateMangaDialogListener {
@@ -67,8 +68,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 	protected static final String SEARCH_TYPE = "type";
 
-	private Integer userID = 0;
-	String userName = "";
+	private User mUser;
 
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerList;
@@ -85,6 +85,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setContentView(R.layout.activity_main);
+
+		mUser = new User();
 
 		mTitle = mDrawerTitle = getTitle();
 		mDrawerTitles = getResources().getStringArray(R.array.drawer_items_array);
@@ -110,19 +112,19 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		R.drawable.ic_drawer, /* nav drawer image to replace 'Up' caret */
 		R.string.drawer_open, /* "open drawer" description for accessibility */
 		R.string.drawer_close /* "close drawer" description for accessibility */
-		) {
-			@Override
-			public void onDrawerClosed(View view) {
-				getActionBar().setTitle(mTitle);
-				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-			}
+				) {
+					@Override
+					public void onDrawerClosed(View view) {
+						getActionBar().setTitle(mTitle);
+						invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+					}
 
-			@Override
-			public void onDrawerOpened(View drawerView) {
-				getActionBar().setTitle(mDrawerTitle);
-				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-			}
-		};
+					@Override
+					public void onDrawerOpened(View drawerView) {
+						getActionBar().setTitle(mDrawerTitle);
+						invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+					}
+				};
 		mDrawerLayout.setDrawerListener(mDrawerToggle);
 
 		if (savedInstanceState == null) {
@@ -139,18 +141,18 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putInt("userID", getUserID());
-		outState.putString("userName", userName);
+		outState.putInt("userID", getUser().getID());
+		outState.putString("userName", mUser.getUsername());
 	}
 
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		if (savedInstanceState != null) {
-			userID = savedInstanceState.getInt("userID");
-			userName = savedInstanceState.getString("userName");
-			if (!userName.isEmpty()) {
-				((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(userName);
+			mUser.setID(savedInstanceState.getInt("userID"));
+			mUser.setUsername(savedInstanceState.getString("userName"));
+			if (!mUser.getUsername().isEmpty()) {
+				((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(mUser.getUsername());
 			}
 			fetchAvatar();
 		}
@@ -225,9 +227,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// The action bar home/up action should open or close the drawer.
 		// ActionBarDrawerToggle will take care of this.
-		if (mDrawerToggle.onOptionsItemSelected(item)) {
-			return true;
-		}
+		if (mDrawerToggle.onOptionsItemSelected(item)) { return true; }
 		// Handle action buttons
 		switch (item.getItemId()) {
 		case R.id.menu_search:
@@ -254,7 +254,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		switch (position) {
 		case 0:
-			if (getUserID() > 0) {
+			if (getUser().isLoggedIn()) {
 				// idk yet
 			} else {
 				// Show login Dialog
@@ -273,11 +273,6 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			// Show manga list
 			fragment = new MangaListFragment();
 			tag = "manga";
-			break;
-		case 3:
-			// Show debug screen
-			fragment = new DebugFragment();
-			tag = "debug";
 			break;
 		default:
 			fragment = new DummySectionFragment();
@@ -364,29 +359,23 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 					Document doc = Jsoup.parse(results.output);
 					String userURL = doc.select("a[href~=^/user/").attr("href");
 					if (!userURL.isEmpty()) {
-						userID = Integer.parseInt(userURL.substring(6));
+						mUser.setID(Integer.parseInt(userURL.substring(6)));
 					} else {
-						userID = 0;
-					}
-
-					// Debug stuff
-					TextView editOutput = ((TextView) findViewById(R.id.editOutput));
-					if (editOutput != null) {
-						editOutput.append(getUserID().toString());
-						Toast.makeText(getBaseContext(), "Login Test Complete", Toast.LENGTH_SHORT).show();
+						mUser.setID(0);
 					}
 
 					// Done
-					if (getUserID() > 0) {
-						Toast.makeText(getBaseContext(), String.format("Login Successful. User ID: %d", getUserID()),
+					if (getUser().isLoggedIn()) {
+						Toast.makeText(getBaseContext(),
+								String.format("Login Successful. User ID: %d", getUser().getID()),
 								Toast.LENGTH_SHORT).show();
 						// Get anime list
 						fetchAnimeList();
 						// Get manga list
 						fetchMangaList();
 						// Get avatar and info
-						userName = doc.getElementsByTag("header").select("h1").text();
-						((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(userName);
+						mUser.setUsername(doc.getElementsByTag("header").select("h1").text());
+						((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(mUser.getUsername());
 						// Use cached and then update file
 						fetchAvatar();
 						fetchAvatar(false);
@@ -523,7 +512,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	private void fetchAvatar(boolean useCached) {
-		new FetchBitmap(MainActivity.this, "http://img.anilist.co/user/sml/" + getUserID() + ".jpg",
+		new FetchBitmap(MainActivity.this, "http://img.anilist.co/user/sml/" + getUser().getID() + ".jpg",
 				new OnBitmapResultListener() {
 					@Override
 					public void onBitmapResult(Bitmap bm) {
@@ -546,11 +535,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		}
 	}
 
-	/**
-	 * @return the userID
-	 */
-	public Integer getUserID() {
-		return userID;
+	public User getUser() {
+		return mUser;
 	}
 
 	@Override

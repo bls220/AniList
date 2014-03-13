@@ -35,15 +35,15 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 	protected ExpandableListAdapter listAdapter;
 
 	private final class Worker extends Thread {
-		private final String mangaPage;
+		private final String page;
 
-		public Worker(String mangaPage) {
-			this.mangaPage = mangaPage;
+		public Worker(String page) {
+			this.page = page;
 		}
 
 		@Override
 		public void run() {
-			ArrayList<ExpandListGroup> items = processHTML(mangaPage);
+			ArrayList<ExpandListGroup> items = processHTML(page);
 			for (ExpandListGroup item : items) {
 				listAdapter.addItem(null, item);
 			}
@@ -62,7 +62,7 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 		super.onCreate(savedInstanceState);
 		MainActivity activity = (MainActivity) getActivity();
 		listAdapter = new ExpandableListAdapter();
-		if (activity.getUserID() > 0)
+		if (activity.getUser().isLoggedIn())
 			listAdapter.addItem(null, new ExpandGroup("Loading..."));
 		else
 			listAdapter.addItem(null, new ExpandGroup("Please Login to view your list"));
@@ -104,8 +104,8 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 
 	public void fetchList() {
 		MainActivity activity = (MainActivity) getActivity();
-		if (activity.getUserID() > 0) {
-			String url = getURLPath() + activity.getUserID();
+		if (activity.getUser().isLoggedIn()) {
+			String url = getURLPath() + activity.getUser().getID();
 			Utils.requestPage(activity, url, false, null, this);
 		}
 	}

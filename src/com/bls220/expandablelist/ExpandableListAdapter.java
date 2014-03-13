@@ -179,11 +179,11 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 	}
 
-	public static class ExpandChid implements ExpandListChild {
+	public static class ExpandChild implements ExpandListChild {
 
 		private final String mText;
 
-		public ExpandChid(String text) {
+		public ExpandChild(String text) {
 			mText = text;
 		}
 
