@@ -1,19 +1,22 @@
-package com.bls220.anilist.anime;
+package com.bls220.anilist.anilist;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
 import com.bls220.anilist.R;
+import com.bls220.anilist.R.id;
+import com.bls220.anilist.R.layout;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandListChild;
-import com.bls220.temp.AniEntry;
 
-public class AnimeExpandChild implements ExpandListChild {
+public class AniExpandChild implements ExpandListChild {
 
 	final AniEntry mEntry;
+	final boolean mIsAnime;
 
-	public AnimeExpandChild(AniEntry entry) {
+	public AniExpandChild(AniEntry entry, boolean isAnime) {
 		mEntry = entry;
+		mIsAnime = isAnime;
 	}
 
 	public AniEntry getEntry() {
@@ -28,12 +31,19 @@ public class AnimeExpandChild implements ExpandListChild {
 		tv = (TextView) v.findViewById(R.id.tvScore);
 		tv.setText(mEntry.getScoreText());
 
+		// TODO: add chapter
 		tv = (TextView) v.findViewById(R.id.tvChapters);
+		tv.setText("TBD");
+		if (mIsAnime) {
+			tv.setVisibility(View.GONE);
+		}
+
+		tv = (TextView) v.findViewById(R.id.tvVolumes);
 		tv.setText(mEntry.getProgressString());
 	}
 
 	@Override
 	public View inflate(LayoutInflater inflater) {
-		return inflater.inflate(R.layout.expandlist_child_item_anime, null);
+		return inflater.inflate(R.layout.expandlist_child_item_manga, null);
 	}
 }

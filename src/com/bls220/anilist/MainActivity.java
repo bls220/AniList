@@ -59,7 +59,6 @@ import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.utils.Utils;
-import com.bls220.temp.User;
 
 public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateAnimeDialogListener,
 		OnResultClickListener, UpdateMangaDialogListener {

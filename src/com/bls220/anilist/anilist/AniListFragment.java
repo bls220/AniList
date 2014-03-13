@@ -1,10 +1,11 @@
-package com.bls220.anilist;
+package com.bls220.anilist.anilist;
 
 /**
  * 
  */
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpStatus;
 
@@ -17,11 +18,16 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.Toast;
 
+import com.bls220.anilist.MainActivity;
+import com.bls220.anilist.R;
+import com.bls220.anilist.R.id;
+import com.bls220.anilist.R.layout;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.utils.Utils;
 import com.bls220.expandablelist.ExpandableListAdapter;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandGroup;
+import com.bls220.expandablelist.ExpandableListAdapter.ExpandListChild;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandListGroup;
 
 /**
@@ -43,15 +49,30 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 
 		@Override
 		public void run() {
-			ArrayList<ExpandListGroup> items = processHTML(page);
-			for (ExpandListGroup item : items) {
-				listAdapter.addItem(null, item);
+			AniList<AniEntry> aniLists = processHTML(page);
+
+			final ArrayList<ExpandListGroup> groups = new ArrayList<ExpandListGroup>(3);
+			List<String> animeGroups = aniLists.getGroups();
+			for (String title : animeGroups) {
+				ExpandGroup group = new ExpandGroup(title);
+				ArrayList<ExpandListChild> children = new ArrayList<ExpandListChild>();
+				for (AniEntry entry : aniLists.getGroupAsList(title)) {
+					children.add(setupAniExpandChild(entry));
+				}
+				group.setItems(children);
+				groups.add(group);
 			}
+
 			getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (listAdapter != null)
+					if (listAdapter != null) {
+						listAdapter.clear();
+						for (ExpandListGroup item : groups) {
+							listAdapter.addItem(null, item);
+						}
 						listAdapter.notifyDataSetChanged();
+					}
 				}
 			});
 		}
@@ -86,13 +107,12 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 
 	@Override
 	public void onTaskComplete(final TaskResults results) {
-		listAdapter.clear();
-
 		if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
 				&& results.status.getStatusCode() != HttpStatus.SC_OK) {
 			Toast.makeText(getActivity(),
 					String.format("Error: [%d] %s", results.status.getStatusCode(), results.status.getReasonPhrase()),
 					Toast.LENGTH_LONG).show();
+			listAdapter.clear();
 			listAdapter.addItem(null, new ExpandGroup("An Error Occured. Please Try Agian."));
 			listAdapter.notifyDataSetChanged();
 			return;
@@ -110,7 +130,9 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 		}
 	}
 
-	protected abstract ArrayList<ExpandListGroup> processHTML(String html);
+	protected abstract AniList<AniEntry> processHTML(String html);
+
+	protected abstract AniExpandChild setupAniExpandChild(AniEntry entry);
 
 	protected abstract String getURLPath();
 }

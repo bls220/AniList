@@ -1,4 +1,4 @@
-package com.bls220.temp;
+package com.bls220.anilist.anilist;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.List;
 
 import android.util.Log;
 
-import com.bls220.temp.AniList.IAniEntry;
+import com.bls220.anilist.anilist.AniList.IAniEntry;
 
 /**
  * Represents a collection of anime/manga lists

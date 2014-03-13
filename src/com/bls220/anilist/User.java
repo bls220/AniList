@@ -1,4 +1,8 @@
-package com.bls220.temp;
+package com.bls220.anilist;
+
+import com.bls220.anilist.anilist.AniEntry;
+import com.bls220.anilist.anilist.AniList;
+
 
 /**
  * Class that holds information about a given user such as id, anime lists, manga lists, etc.

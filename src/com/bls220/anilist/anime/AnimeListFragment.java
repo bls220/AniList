@@ -3,9 +3,6 @@
  */
 package com.bls220.anilist.anime;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,13 +12,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
 
-import com.bls220.anilist.AniListFragment;
 import com.bls220.anilist.MainActivity;
-import com.bls220.expandablelist.ExpandableListAdapter.ExpandGroup;
-import com.bls220.expandablelist.ExpandableListAdapter.ExpandListChild;
-import com.bls220.expandablelist.ExpandableListAdapter.ExpandListGroup;
-import com.bls220.temp.AniEntry;
-import com.bls220.temp.AniList;
+import com.bls220.anilist.anilist.AniEntry;
+import com.bls220.anilist.anilist.AniExpandChild;
+import com.bls220.anilist.anilist.AniList;
+import com.bls220.anilist.anilist.AniListFragment;
 
 /**
  * @author bsmith
@@ -31,7 +26,7 @@ public class AnimeListFragment extends AniListFragment {
 
 	@Override
 	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-		AnimeExpandChild child = (AnimeExpandChild) v.getTag();
+		AniExpandChild child = (AniExpandChild) v.getTag();
 		AniEntry entry = child.getEntry();
 
 		Log.v(TAG, String.format("Preparing to update %s (%d)\n" +
@@ -53,7 +48,7 @@ public class AnimeListFragment extends AniListFragment {
 	}
 
 	@Override
-	protected ArrayList<ExpandListGroup> processHTML(String html) {
+	protected AniList<AniEntry> processHTML(String html) {
 		AniList<AniEntry> animeLists = ((MainActivity) getActivity()).getUser().getAnimeLists();
 
 		Document doc = Jsoup.parse(html);
@@ -98,23 +93,17 @@ public class AnimeListFragment extends AniListFragment {
 						));
 			}
 		}
-		ArrayList<ExpandListGroup> groups = new ArrayList<ExpandListGroup>(3);
-		List<String> animeGroups = animeLists.getGroups();
-		for (String title : animeGroups) {
-			ExpandGroup group = new ExpandGroup(title);
-			ArrayList<ExpandListChild> children = new ArrayList<ExpandListChild>();
-			for (AniEntry entry : animeLists.getGroupAsList(title)) {
-				children.add(new AnimeExpandChild(entry));
-			}
-			group.setItems(children);
-			groups.add(group);
-		}
-		return groups;
+		return animeLists;
 	}
 
 	@Override
 	protected String getURLPath() {
 		return "/animelist/";
+	}
+
+	@Override
+	protected AniExpandChild setupAniExpandChild(AniEntry entry) {
+		return new AniExpandChild(entry, true);
 	}
 
 }

@@ -1,6 +1,6 @@
-package com.bls220.temp;
+package com.bls220.anilist.anilist;
 
-import com.bls220.temp.AniList.IAniEntry;
+import com.bls220.anilist.anilist.AniList.IAniEntry;
 
 public class AniEntry implements IAniEntry {
 	private final Integer mID;
