@@ -39,13 +39,10 @@ import com.bls220.anilist.utils.Utils;
  */
 public class ResultFragment extends Fragment implements AbsListView.OnItemClickListener, OnTaskCompleteListener {
 
-	// TODO: Rename parameter arguments, choose names that match
-	// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 	public static final String ARG_QUERY = "query";
 	public static final String ARG_QUERY_TYPE = "query_type";
 	private static final String TAG = ResultFragment.class.getSimpleName();
 
-	// TODO: Rename and change types of parameters
 	private String mQuery;
 	private String mType;
 
@@ -61,7 +58,6 @@ public class ResultFragment extends Fragment implements AbsListView.OnItemClickL
 	 */
 	private ListAdapter mAdapter;
 
-	// TODO: Rename and change types of parameters
 	public static ResultFragment newInstance(String query, String type) {
 		ResultFragment fragment = new ResultFragment();
 		Bundle args = new Bundle();

@@ -207,7 +207,6 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 			@Override
 			public boolean onQueryTextChange(String text) {
-				// TODO Auto-generated method stub
 				return false;
 			}
 		});
