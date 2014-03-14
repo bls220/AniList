@@ -18,10 +18,13 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bls220.anilist.anilist.AniEntry;
+import com.bls220.anilist.anilist.AniList;
 import com.bls220.anilist.utils.FetchBitmap;
 import com.bls220.anilist.utils.FetchBitmap.OnBitmapResultListener;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
@@ -111,6 +114,13 @@ public class InfoFragment extends Fragment implements OnTaskCompleteListener {
 		// }
 		// });
 		imgPoster = (ImageView) view.findViewById(R.id.imgPoster);
+		Button btnEdit = (Button) view.findViewById(R.id.button1);
+		User user = ((MainActivity) getActivity()).getUser();
+		AniList<AniEntry> list = mType == EINFO_TYPE.ANIME ? user.getAnimeLists() : user.getMangaLists();
+		if (list.getEntry(mID) == null) {
+			// User hasn't added anime/manga yet
+			btnEdit.setEnabled(true);
+		}
 		return view;
 	}
 
