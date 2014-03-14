@@ -131,6 +131,8 @@ public class AniList<E extends IAniEntry> {
 	 * @return - the entry with the associated ID or null if no entry was found.
 	 */
 	public E getEntry(Integer id) {
+		if (mEntries == null)
+			return null;
 		return mEntries.get(id);
 	}
 
