@@ -20,8 +20,6 @@ import android.widget.Toast;
 
 import com.bls220.anilist.MainActivity;
 import com.bls220.anilist.R;
-import com.bls220.anilist.R.id;
-import com.bls220.anilist.R.layout;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.utils.Utils;
