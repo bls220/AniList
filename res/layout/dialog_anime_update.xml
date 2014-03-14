@@ -50,7 +50,7 @@
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:entries="@array/status_array_manga" />
+            android:entries="@array/status_array_anime" />
     </LinearLayout>
 
     <TextView
