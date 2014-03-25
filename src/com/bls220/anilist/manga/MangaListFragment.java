@@ -105,11 +105,6 @@ public class MangaListFragment extends AniListFragment {
 	}
 
 	@Override
-	protected String getURLPath() {
-		return "/mangalist/";
-	}
-
-	@Override
 	protected AniExpandChild setupAniExpandChild(AniEntry entry) {
 		return new AniExpandChild(entry, false);
 	}

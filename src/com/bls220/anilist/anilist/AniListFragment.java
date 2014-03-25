@@ -22,7 +22,6 @@ import com.bls220.anilist.MainActivity;
 import com.bls220.anilist.R;
 import com.bls220.anilist.utils.HtmlHelperTask.OnTaskCompleteListener;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
-import com.bls220.anilist.utils.Utils;
 import com.bls220.expandablelist.ExpandableListAdapter;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandGroup;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandListChild;
@@ -97,9 +96,6 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 		animeList.setAdapter(listAdapter);
 		animeList.setOnChildClickListener(this);
 
-		// get Anime List
-		fetchList();
-
 		return rootView;
 	}
 
@@ -120,17 +116,7 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 
 	}
 
-	public void fetchList() {
-		MainActivity activity = (MainActivity) getActivity();
-		if (activity.getUser().isLoggedIn()) {
-			String url = getURLPath() + activity.getUser().getID();
-			Utils.requestPage(activity, url, false, null, this);
-		}
-	}
-
 	protected abstract AniList<AniEntry> processHTML(String html);
 
 	protected abstract AniExpandChild setupAniExpandChild(AniEntry entry);
-
-	protected abstract String getURLPath();
 }

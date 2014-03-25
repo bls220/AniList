@@ -522,14 +522,20 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	public void fetchAnimeList() {
 		AnimeListFragment animeFrag = (AnimeListFragment) getSupportFragmentManager().findFragmentByTag("anime");
 		if (animeFrag != null && animeFrag.isVisible()) {
-			animeFrag.fetchList();
+			if (getUser().isLoggedIn()) {
+				String url = "/animelist/" + getUser().getID();
+				Utils.requestPage(this, url, false, null, animeFrag);
+			}
 		}
 	}
 
 	public void fetchMangaList() {
 		MangaListFragment mangaFrag = (MangaListFragment) getSupportFragmentManager().findFragmentByTag("manga");
 		if (mangaFrag != null && mangaFrag.isVisible()) {
-			mangaFrag.fetchList();
+			if (getUser().isLoggedIn()) {
+				String url = "/mangalist/" + getUser().getID();
+				Utils.requestPage(this, url, false, null, mangaFrag);
+			}
 		}
 	}
 
