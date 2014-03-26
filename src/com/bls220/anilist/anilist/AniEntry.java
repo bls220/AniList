@@ -1,8 +1,6 @@
 package com.bls220.anilist.anilist;
 
-import com.bls220.anilist.anilist.AniList.IAniEntry;
-
-public class AniEntry implements IAniEntry {
+public class AniEntry {
 	private final Integer mID;
 	private final String mTitle;
 
@@ -32,7 +30,6 @@ public class AniEntry implements IAniEntry {
 		this(title, id, "-", 0, 0, "Watching");
 	}
 
-	@Override
 	public Integer getID() {
 		return mID;
 	}

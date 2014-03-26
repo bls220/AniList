@@ -3,11 +3,6 @@
  */
 package com.bls220.anilist.anime;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
@@ -15,7 +10,6 @@ import android.widget.ExpandableListView;
 import com.bls220.anilist.MainActivity;
 import com.bls220.anilist.anilist.AniEntry;
 import com.bls220.anilist.anilist.AniExpandChild;
-import com.bls220.anilist.anilist.AniList;
 import com.bls220.anilist.anilist.AniListFragment;
 
 /**
@@ -48,57 +42,24 @@ public class AnimeListFragment extends AniListFragment {
 	}
 
 	@Override
-	protected AniList<AniEntry> processHTML(String html) {
-		AniList<AniEntry> animeLists = ((MainActivity) getActivity()).getUser().getAnimeLists();
-
-		Document doc = Jsoup.parse(html);
-		// Get All lists
-		Element allLists = doc.getElementById("lists");
-		// Get List names
-		Elements listHeaders = allLists.getElementsByTag("h3");
-		// Get Lists
-		Elements lists = allLists.getElementsByClass("list");
-
-		// Clear all groups in anime lists
-		animeLists.removeAllGroups();
-		for (int i = 0; i < listHeaders.size(); i++) {
-			String title = listHeaders.get(i).text();
-			// Create children entries
-			Elements list = lists.get(i).getElementsByClass("rtitle");
-			for (Element entry : list) {
-				// Extract item ID
-				String name = entry.select("a").text();
-				String id = entry.select("a").attr("href");
-				id = id.substring(7, id.indexOf("/", 7));
-				// Get Columns
-				Elements cols = entry.select("td.sml_col");
-				// Get Score
-				String score = cols.get(0).text();
-				// Get Progress
-				String[] progress = cols.get(1).text().replace("+", "").trim().split("/");
-
-				if (progress[0].isEmpty()) {
-					progress[0] = "-1";
-				}
-				Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
-				Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
-
-				Integer animeID = Integer.parseInt(id);
-				animeLists.addToGroup(title, new AniEntry(String.format("%s", name, id),
-						animeID,
-						score,
-						curEp,
-						totEp,
-						title // TODO: fix for custom lists
-						));
-			}
-		}
-		return animeLists;
+	protected AniExpandChild setupAniExpandChild(AniEntry entry) {
+		return new AniExpandChild(entry, true);
 	}
 
 	@Override
-	protected AniExpandChild setupAniExpandChild(AniEntry entry) {
-		return new AniExpandChild(entry, true);
+	protected void fetchList() {
+		Runnable callback = new Runnable() {
+			@Override
+			public void run() {
+				updateList();
+			}
+		};
+		((MainActivity) getActivity()).fetchAnimeList(callback);
+	}
+
+	@Override
+	protected void updateList() {
+		updateList(((MainActivity) getActivity()).getUser().getAnimeLists());
 	}
 
 }

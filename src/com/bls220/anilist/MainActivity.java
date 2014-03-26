@@ -42,9 +42,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bls22.anilist.parser.AniListParser;
 import com.bls220.anilist.InfoFragment.EINFO_TYPE;
 import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
 import com.bls220.anilist.ResultFragment.OnResultClickListener;
+import com.bls220.anilist.anilist.AniList;
 import com.bls220.anilist.anime.AnimeListFragment;
 import com.bls220.anilist.anime.UpdateAnimeDialogFragment;
 import com.bls220.anilist.anime.UpdateAnimeDialogFragment.UpdateAnimeDialogListener;
@@ -262,6 +264,8 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			updateTitle = false;
 			tag = "user";
 			break;
+		default:
+			position = 1;
 		case 1:
 			// Show anime list
 			fragment = new AnimeListFragment();
@@ -271,12 +275,6 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			// Show manga list
 			fragment = new MangaListFragment();
 			tag = "manga";
-			break;
-		default:
-			fragment = new DummySectionFragment();
-			args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position);
-			tag = "dummy";
-			updateTitle = false;
 			break;
 		}
 
@@ -367,10 +365,18 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 						Toast.makeText(getBaseContext(),
 								String.format("Login Successful. User ID: %d", getUser().getID()),
 								Toast.LENGTH_SHORT).show();
+
+						Runnable showDefaultFragment = new Runnable() {
+							@Override
+							public void run() {
+								selectItem(-1);
+							}
+						};
+
 						// Get anime list
-						fetchAnimeList();
+						fetchAnimeList(showDefaultFragment);
 						// Get manga list
-						fetchMangaList();
+						fetchMangaList(null);
 						// Get avatar and info
 						mUser.setUsername(doc.getElementsByTag("header").select("h1").text());
 						((TextView) mDrawerHeader.findViewById(R.id.txtDescription)).setText(mUser.getUsername());
@@ -404,7 +410,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			@Override
 			public void run() {
 				// Refresh MangaList
-				fetchMangaList();
+				fetchMangaList(null);
 			}
 		});
 		RequestParams params;
@@ -465,7 +471,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 			@Override
 			public void run() {
 				// Refresh AnimeList
-				fetchAnimeList();
+				fetchAnimeList(null);
 			}
 		});
 		RequestParams params;
@@ -519,23 +525,17 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 				}, useCached).execute();
 	}
 
-	public void fetchAnimeList() {
-		AnimeListFragment animeFrag = (AnimeListFragment) getSupportFragmentManager().findFragmentByTag("anime");
-		if (animeFrag != null && animeFrag.isVisible()) {
-			if (getUser().isLoggedIn()) {
-				String url = "/animelist/" + getUser().getID();
-				Utils.requestPage(this, url, false, null, animeFrag);
-			}
+	public void fetchAnimeList(Runnable callback) {
+		if (getUser().isLoggedIn()) {
+			String url = "/animelist/" + getUser().getID();
+			Utils.requestPage(this, url, false, null, new FetchListCompleteHandler(AniListParser.ETYPE.ANIME, callback));
 		}
 	}
 
-	public void fetchMangaList() {
-		MangaListFragment mangaFrag = (MangaListFragment) getSupportFragmentManager().findFragmentByTag("manga");
-		if (mangaFrag != null && mangaFrag.isVisible()) {
-			if (getUser().isLoggedIn()) {
-				String url = "/mangalist/" + getUser().getID();
-				Utils.requestPage(this, url, false, null, mangaFrag);
-			}
+	public void fetchMangaList(Runnable callback) {
+		if (getUser().isLoggedIn()) {
+			String url = "/mangalist/" + getUser().getID();
+			Utils.requestPage(this, url, false, null, new FetchListCompleteHandler(AniListParser.ETYPE.MANGA, callback));
 		}
 	}
 
@@ -550,5 +550,53 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment);
 		ft.addToBackStack(null);
 		ft.commit();
+	}
+
+	private class FetchListCompleteHandler implements OnTaskCompleteListener {
+		private final AniListParser.ETYPE mAniType;
+		private final Runnable mCallback;
+
+		public FetchListCompleteHandler(AniListParser.ETYPE type, Runnable callback) {
+			mAniType = type;
+			mCallback = callback;
+		}
+
+		@Override
+		public void onTaskComplete(TaskResults results) {
+			if (results.status.getStatusCode() != HttpStatus.SC_ACCEPTED
+					&& results.status.getStatusCode() != HttpStatus.SC_OK) {
+				Toast.makeText(
+						MainActivity.this,
+						String.format("Error: [%d] %s", results.status.getStatusCode(),
+								results.status.getReasonPhrase()),
+						Toast.LENGTH_LONG).show();
+				return;
+			}
+
+			final String html = results.output;
+
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					AniList list = null;
+					switch (mAniType) {
+					case ANIME:
+						list = getUser().getAnimeLists();
+						break;
+					case MANGA:
+						list = getUser().getMangaLists();
+						break;
+					default:
+						return;
+					}
+					AniListParser.parse(mAniType, html, list);
+					if (mCallback != null) {
+						MainActivity.this.runOnUiThread(mCallback);
+					}
+				}
+			}).start();
+		}
+
 	}
 }

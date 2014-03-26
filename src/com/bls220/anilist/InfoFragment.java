@@ -23,7 +23,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bls220.anilist.anilist.AniEntry;
 import com.bls220.anilist.anilist.AniList;
 import com.bls220.anilist.utils.FetchBitmap;
 import com.bls220.anilist.utils.FetchBitmap.OnBitmapResultListener;
@@ -116,7 +115,7 @@ public class InfoFragment extends Fragment implements OnTaskCompleteListener {
 		imgPoster = (ImageView) view.findViewById(R.id.imgPoster);
 		Button btnEdit = (Button) view.findViewById(R.id.button1);
 		User user = ((MainActivity) getActivity()).getUser();
-		AniList<AniEntry> list = mType == EINFO_TYPE.ANIME ? user.getAnimeLists() : user.getMangaLists();
+		AniList list = mType == EINFO_TYPE.ANIME ? user.getAnimeLists() : user.getMangaLists();
 		if (list.getEntry(mID) == null) {
 			// User hasn't added anime/manga yet
 			btnEdit.setEnabled(true);

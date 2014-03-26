@@ -1,8 +1,6 @@
 package com.bls220.anilist;
 
-import com.bls220.anilist.anilist.AniEntry;
 import com.bls220.anilist.anilist.AniList;
-
 
 /**
  * Class that holds information about a given user such as id, anime lists, manga lists, etc.
@@ -17,12 +15,12 @@ public class User {
 	Integer mID;
 
 	// Lists
-	private final AniList<AniEntry> mAnimeLists;
-	private final AniList<AniEntry> mMangaLists;
+	private final AniList mAnimeLists;
+	private final AniList mMangaLists;
 
 	public User() {
-		mAnimeLists = new AniList<AniEntry>();
-		mMangaLists = new AniList<AniEntry>();
+		mAnimeLists = new AniList();
+		mMangaLists = new AniList();
 		mID = 0;
 		mUsername = "";
 	}
@@ -47,11 +45,11 @@ public class User {
 		return mUsername;
 	}
 
-	public AniList<AniEntry> getAnimeLists() {
+	public AniList getAnimeLists() {
 		return mAnimeLists;
 	}
 
-	public AniList<AniEntry> getMangaLists() {
+	public AniList getMangaLists() {
 		return mMangaLists;
 	}
 

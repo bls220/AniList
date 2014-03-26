@@ -7,15 +7,13 @@ import java.util.List;
 
 import android.util.Log;
 
-import com.bls220.anilist.anilist.AniList.IAniEntry;
-
 /**
  * Represents a collection of anime/manga lists
  * 
  * @author bsmith
  * 
  */
-public class AniList<E extends IAniEntry> {
+public class AniList {
 
 	private final String TAG = AniList.class.getSimpleName();
 
@@ -36,12 +34,8 @@ public class AniList<E extends IAniEntry> {
 		}
 	}
 
-	public interface IAniEntry {
-		public Integer getID();
-	}
-
 	private ArrayList<Group> mGroups;
-	private HashMap<Integer, E> mEntries; // Anime | Manga Entries, key = anime_id
+	static private HashMap<Integer, AniEntry> mEntries; // Anime | Manga Entries, key = anime_id
 
 	/**
 	 * Creates a new group with given the <var>title</var> if it doesn't exist.
@@ -69,7 +63,7 @@ public class AniList<E extends IAniEntry> {
 		return group;
 	}
 
-	private void addToGroup(Group group, E entry) {
+	private void addToGroup(Group group, AniEntry entry) {
 		addEntry(entry);
 		group.add(entry.getID());
 	}
@@ -95,10 +89,10 @@ public class AniList<E extends IAniEntry> {
 	 *            - the title of the group to get
 	 * @return - A list of entries in the group if it exists, else null.
 	 */
-	public ArrayList<E> getGroupAsList(String title) {
+	public ArrayList<AniEntry> getGroupAsList(String title) {
 		Group group = getGroup(title);
 		if (group == null) { return null; }
-		ArrayList<E> list = new ArrayList<E>(group.size());
+		ArrayList<AniEntry> list = new ArrayList<AniEntry>(group.size());
 		for (Integer id : group) {
 			list.add(getEntry(id));
 		}
@@ -111,16 +105,29 @@ public class AniList<E extends IAniEntry> {
 	 * @param entry
 	 *            - the entry to be added
 	 */
-	public void addEntry(E entry) {
+	public void addEntry(AniEntry entry) {
+		Integer id = entry.getID();
+		if (updateEntry(entry) != null) {
+			Log.w(TAG, "Overwrote entry with ID: " + id.toString());
+		}
+	}
+
+	/**
+	 * Updates an entry to the entry collection. Will add an entry if it doesn't exist.
+	 * 
+	 * @param entry
+	 *            - the entry to be updated
+	 * 
+	 * @return - the old entry, null if the entry did not exist.
+	 */
+	public AniEntry updateEntry(AniEntry entry) {
 		if (mEntries == null) {
-			mEntries = new HashMap<Integer, E>();
+			mEntries = new HashMap<Integer, AniEntry>();
 		}
 
 		// Add to entry list
 		Integer id = entry.getID();
-		if (mEntries.put(id, entry) != null) {
-			Log.w(TAG, "Overwrote entry with ID: " + id.toString());
-		}
+		return mEntries.put(id, entry);
 	}
 
 	/**
@@ -130,25 +137,29 @@ public class AniList<E extends IAniEntry> {
 	 *            - the id of the entry to get
 	 * @return - the entry with the associated ID or null if no entry was found.
 	 */
-	public E getEntry(Integer id) {
+	public AniEntry getEntry(Integer id) {
 		if (mEntries == null)
 			return null;
 		return mEntries.get(id);
 	}
 
-	public void addGroup(String title, List<E> entries) {
+	public void addGroup(String title, List<AniEntry> entries) {
 		Group group = createGroup(title);
-		for (E entry : entries) {
+		for (AniEntry entry : entries) {
 			addToGroup(group, entry);
 		}
 	}
 
-	public void addToGroup(String title, E entry) {
+	public void addToGroup(String title, AniEntry entry) {
 		Group group = createGroup(title);
 		addToGroup(group, entry);
 	}
 
 	public List<String> getGroups() {
+		if (mGroups == null) {
+			mGroups = new ArrayList<Group>();
+		}
+
 		ArrayList<String> groups = new ArrayList<String>(mGroups.size());
 		for (Group group : mGroups) {
 			groups.add(group.getTitle());
