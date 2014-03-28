@@ -127,7 +127,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		mDrawerLayout.setDrawerListener(mDrawerToggle);
 
 		if (savedInstanceState == null) {
-			selectItem(1);
+			selectItem(-1);
 		}
 
 	}
@@ -247,7 +247,6 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		// update the main content by replacing fragments
 		Fragment fragment = null;
 		Bundle args = new Bundle();
-		String tag;
 		boolean updateTitle = true;
 
 		switch (position) {
@@ -260,23 +259,20 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 				mDrawerLayout.closeDrawer(mDrawerList);
 			}
 			updateTitle = false;
-			tag = "user";
 			break;
 		default:
 			position = 1;
 		case 1:
 			// Show anime list
 			fragment = new AnimeListFragment();
-			tag = "anime";
 			break;
 		case 2:
 			// Show manga list
 			fragment = new MangaListFragment();
-			tag = "manga";
 			break;
 		}
 
-		replaceContent(fragment, args, tag);
+		replaceContent(fragment, args);
 
 		// update selected item and title, then close the drawer
 		mDrawerList.setItemChecked(position, true);
@@ -285,11 +281,11 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		mDrawerLayout.closeDrawer(mDrawerList);
 	}
 
-	private void replaceContent(Fragment fragment, Bundle args, String tag) {
+	private void replaceContent(Fragment fragment, Bundle args) {
 		if (fragment != null) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
 			fragment.setArguments(args);
-			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, tag).commit();
+			fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
 		}
 	}
 
