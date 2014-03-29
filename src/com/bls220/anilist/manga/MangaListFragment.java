@@ -38,6 +38,7 @@ public class MangaListFragment extends AniListFragment {
 		dialog.setStatus(entry.getStatus());
 		dialog.setChapter(entry.getChapter());
 		dialog.setVolume(entry.getCurrent());
+		dialog.setMaxVolumes(entry.getMax());
 		dialog.show(getFragmentManager(), "update");
 		return true;
 	}

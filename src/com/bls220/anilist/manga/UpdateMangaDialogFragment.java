@@ -40,6 +40,7 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 	UpdateMangaDialogListener mListener;
 	private Integer chapter;
 	private Integer volume;
+	private Integer maxVolume;
 	private Integer mangaID;
 	private Float score;
 	private String status;
@@ -85,11 +86,11 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 
 		volumeNumberPicker = (NumberPicker) view.findViewById(R.id.volumeNumberPicker);
 
-		if (volume > 0) {
+		if (volume >= 0 && maxVolume > 0) {
 			final Integer startVolumeVal = volume;
 
-			volumeNumberPicker.setMinValue(1);
-			volumeNumberPicker.setMaxValue(Integer.MAX_VALUE);
+			volumeNumberPicker.setMinValue(0);
+			volumeNumberPicker.setMaxValue(maxVolume);
 			volumeNumberPicker.setValue(volume);
 
 			volumeNumberPicker.setOnValueChangedListener(new OnValueChangeListener() {
@@ -134,7 +135,7 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 		// Inflate and set the layout for the dialog
 		// Pass null as the parent view because its going in the dialog layout
 		builder.setView(view)
-		// Add action buttons
+				// Add action buttons
 				.setPositiveButton("Update", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int id) {
@@ -170,9 +171,7 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 	 * @return the score
 	 */
 	public Float getScore() {
-		if (scoreBar != null) {
-			return scoreBar.getRating() * 2;
-		}
+		if (scoreBar != null) { return scoreBar.getRating() * 2; }
 		return score * 2;
 	}
 
@@ -189,10 +188,12 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 	}
 
 	public Integer getVolume() {
-		if (volumeNumberPicker != null) {
-			return volumeNumberPicker.getValue();
-		}
+		if (volumeNumberPicker != null) { return volumeNumberPicker.getValue(); }
 		return volume;
+	}
+
+	public void setMaxVolumes(Integer max) {
+		maxVolume = max;
 	}
 
 	public void setChapter(Integer chap) {
@@ -200,9 +201,7 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 	}
 
 	public Integer getChapter() {
-		if (chapterNumberPicker != null) {
-			return chapterNumberPicker.getValue();
-		}
+		if (chapterNumberPicker != null) { return chapterNumberPicker.getValue(); }
 		return chapter;
 	}
 
@@ -225,9 +224,7 @@ public class UpdateMangaDialogFragment extends DialogFragment {
 	 * @return the status
 	 */
 	public String getStatus() {
-		if (statusSpinner != null) {
-			return (String) statusSpinner.getSelectedItem();
-		}
+		if (statusSpinner != null) { return (String) statusSpinner.getSelectedItem(); }
 		return status;
 	}
 

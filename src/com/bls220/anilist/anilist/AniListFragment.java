@@ -60,8 +60,11 @@ public abstract class AniListFragment extends Fragment implements OnChildClickLi
 	}
 
 	protected void updateList(AniList aniLists) {
-		if (aniLists == null)
+		if (aniLists == null) {
+			// Fetch list and return
+			fetchList();
 			return;
+		}
 
 		final ArrayList<ExpandListGroup> groups = new ArrayList<ExpandListGroup>(3);
 		List<String> animeGroups = aniLists.getGroups();

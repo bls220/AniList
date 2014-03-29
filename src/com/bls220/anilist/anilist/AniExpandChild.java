@@ -5,8 +5,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bls220.anilist.R;
-import com.bls220.anilist.R.id;
-import com.bls220.anilist.R.layout;
 import com.bls220.expandablelist.ExpandableListAdapter.ExpandListChild;
 
 public class AniExpandChild implements ExpandListChild {
@@ -31,9 +29,9 @@ public class AniExpandChild implements ExpandListChild {
 		tv = (TextView) v.findViewById(R.id.tvScore);
 		tv.setText(mEntry.getScoreText());
 
-		// TODO: add chapter
+		// Add chapter
 		tv = (TextView) v.findViewById(R.id.tvChapters);
-		tv.setText("TBD");
+		tv.setText(mEntry.getChapter().toString());
 		if (mIsAnime) {
 			tv.setVisibility(View.GONE);
 		}
