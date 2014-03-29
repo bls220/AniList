@@ -103,7 +103,7 @@ public class AniListParser {
 				if (chapter.isEmpty()) {
 					chapter = "-1";
 				}
-				Integer curChap = Integer.parseInt(chapter); // TODO: Do something with this THING
+				Integer curChap = Integer.parseInt(chapter);
 
 				// Get Progress
 				String[] progress = cols.get(2).text().replace("+", "").trim().split("/");
@@ -120,7 +120,8 @@ public class AniListParser {
 						score,
 						curVol,
 						totVol,
-						title // TODO: fix for custom lists
+						title, // TODO: fix for custom lists
+						curChap
 						));
 			}
 		}

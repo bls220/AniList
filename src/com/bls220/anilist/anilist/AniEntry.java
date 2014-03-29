@@ -12,17 +12,24 @@ public class AniEntry {
 	private Integer mMax; // max Episode/Volume
 
 	// Manga Specific
-	private Integer mChapter; // TODO: and YOU!!! fuck you.
+	private Integer mChapter; // Current chapter of manga -- should be 0 for anime
 
-	// Common Constructor - For Convenience
+	// Manga Constructor - For Convenience
 	public AniEntry(String title, Integer id, String score, Integer current, Integer max,
-			CharSequence status) {
+			CharSequence status, Integer chapter) {
 		mID = id;
 		mTitle = title;
 		setScore(score);
 		setStatus(status);
 		setCurrent(current);
 		setMax(max);
+		setChapter(chapter);
+	}
+
+	// Common Constructor - For Convenience
+	public AniEntry(String title, Integer id, String score, Integer current, Integer max,
+			CharSequence status) {
+		this(title, id, score, current, max, status, 0);
 	}
 
 	// Minimal Common Constructor
@@ -110,11 +117,25 @@ public class AniEntry {
 	}
 
 	/**
-	 * @param Status
+	 * @param status
 	 *            the Status to set
 	 */
 	public void setStatus(CharSequence status) {
 		this.mStatus = status;
 	}
 
+	/**
+	 * @param chapter
+	 *            the chapter to set
+	 */
+	private void setChapter(Integer chapter) {
+		this.mChapter = chapter;
+	}
+
+	/**
+	 * @return the Chapter
+	 */
+	public Integer getChapter() {
+		return mChapter;
+	}
 }
