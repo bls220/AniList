@@ -31,7 +31,7 @@ public class AniExpandChild implements ExpandListChild {
 
 		// Add chapter
 		tv = (TextView) v.findViewById(R.id.tvChapters);
-		tv.setText(mEntry.getChapter().toString());
+		tv.setText(mEntry.getChapterProgress().toString());
 		if (mIsAnime) {
 			tv.setVisibility(View.GONE);
 		}

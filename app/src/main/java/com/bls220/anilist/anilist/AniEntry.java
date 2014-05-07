@@ -13,10 +13,11 @@ public class AniEntry {
 
 	// Manga Specific
 	private Integer mChapter; // Current chapter of manga -- should be 0 for anime
+    private Integer mChapterMax; // Total chapters of manga -- should be 0 for anime
 
 	// Manga Constructor - For Convenience
 	public AniEntry(String title, Integer id, String score, Integer current, Integer max,
-			CharSequence status, Integer chapter) {
+			CharSequence status, Integer chapter, Integer chapterMax) {
 		mID = id;
 		mTitle = title;
 		setScore(score);
@@ -24,12 +25,13 @@ public class AniEntry {
 		setCurrent(current);
 		setMax(max);
 		setChapter(chapter);
+        setChapterMax(chapterMax);
 	}
 
-	// Common Constructor - For Convenience
+    // Common Constructor - For Convenience
 	public AniEntry(String title, Integer id, String score, Integer current, Integer max,
 			CharSequence status) {
-		this(title, id, score, current, max, status, 0);
+		this(title, id, score, current, max, status, 0, 0);
 	}
 
 	// Minimal Common Constructor
@@ -76,18 +78,26 @@ public class AniEntry {
 	 * @return the current progress as a string
 	 */
 	public String getProgressString() {
-		String str = "";
-		if (mCurrent >= 0 && mMax >= 0) {
-			str = String.format("%d/%d", mCurrent, mMax);
-		}
-		else {
-			if (mCurrent >= 0)
-				str = mCurrent.toString();
-			if (mMax >= 0)
-				str = mMax.toString();
-		}
-		return str;
+        return formatProgress(mCurrent, mMax);
 	}
+
+    public String getChapterProgress(){
+        return formatProgress(mChapter, mChapterMax);
+    }
+
+    private String formatProgress(Integer cur, Integer max){
+        String str = "";
+        if (cur >= 0 && max >= 0) {
+            str = String.format("%d/%d", cur, max);
+        }
+        else {
+            if (cur >= 0)
+                str = cur.toString();
+            if (max >= 0)
+                str = max.toString();
+        }
+        return str;
+    }
 
 	/**
 	 * @param curProgress
@@ -138,4 +148,13 @@ public class AniEntry {
 	public Integer getChapter() {
 		return mChapter;
 	}
+
+    public void setChapterMax(Integer chapterMax) {
+        this.mChapterMax = chapterMax;
+    }
+
+    public Integer getChapterMax(){
+        return this.mChapterMax;
+    }
+
 }

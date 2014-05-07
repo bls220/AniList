@@ -99,11 +99,12 @@ public class AniListParser {
 				// Get Score
 				String score = cols.get(0).text();
 				// Get Chapters
-				String chapter = cols.get(1).text().replace("+", "").trim();
-				if (chapter.isEmpty()) {
-					chapter = "-1";
+				String[] chapters = cols.get(1).text().replace("+", "").trim().split("/");
+				if (chapters[0].isEmpty()) {
+					chapters[0] = "-1";
 				}
-				Integer curChap = Integer.parseInt(chapter);
+				Integer curChap = Integer.parseInt(chapters[0]);
+                Integer totChap = chapters.length > 1 ? Integer.parseInt(chapters[1]) : -1;
 
 				// Get Progress
 				String[] progress = cols.get(2).text().replace("+", "").trim().split("/");
@@ -121,7 +122,8 @@ public class AniListParser {
 						curVol,
 						totVol,
 						title, // TODO: fix for custom lists
-						curChap
+						curChap,
+                        totChap
 						));
 			}
 		}
