@@ -36,6 +36,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
+import android.widget.NumberPicker;
+import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,11 +48,8 @@ import com.bls220.anilist.LoginDialogFragment.LoginDialogListener;
 import com.bls220.anilist.ResultFragment.OnResultClickListener;
 import com.bls220.anilist.anilist.AniList;
 import com.bls220.anilist.anime.AnimeListFragment;
-import com.bls220.anilist.anime.UpdateAnimeDialogFragment;
-import com.bls220.anilist.anime.UpdateAnimeDialogFragment.UpdateAnimeDialogListener;
 import com.bls220.anilist.manga.MangaListFragment;
-import com.bls220.anilist.manga.UpdateMangaDialogFragment;
-import com.bls220.anilist.manga.UpdateMangaDialogFragment.UpdateMangaDialogListener;
+import com.bls220.anilist.UpdateDialogFragment.UpdateDialogListener;
 import com.bls220.anilist.utils.ExecuteHtmlTaskQueue;
 import com.bls220.anilist.utils.ExecuteHtmlTaskQueue.Task;
 import com.bls220.anilist.utils.FetchBitmap;
@@ -60,8 +59,8 @@ import com.bls220.anilist.utils.HtmlHelperTask.RequestParams;
 import com.bls220.anilist.utils.HtmlHelperTask.TaskResults;
 import com.bls220.anilist.utils.Utils;
 
-public class MainActivity extends ActionBarActivity implements LoginDialogListener, UpdateAnimeDialogListener,
-		OnResultClickListener, UpdateMangaDialogListener {
+public class MainActivity extends ActionBarActivity implements LoginDialogListener,
+		OnResultClickListener, UpdateDialogListener {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -372,10 +371,26 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 	}
 
 	@Override
-	public void onUpdateMangaDialogPositiveClick(UpdateMangaDialogFragment dialog) {
+    public void onUpdateDialogPositiveClick(UpdateDialogFragment dialog, UpdateDialogFragment.EUpdateType type, NumberPicker numLeft, NumberPicker numRight, Spinner spinnerStatus, RatingBar barScore) {
+        switch( type){
+            case ANIME:
+                this.onUpdateAnimeDialogPositiveClick(dialog, numLeft, spinnerStatus, barScore);
+                break;
+            case MANGA:
+                this.onUpdateMangaDialogPositiveClick(dialog, numLeft, numRight, spinnerStatus, barScore);
+                break;
+        }
+    }
+
+	public void onUpdateMangaDialogPositiveClick(UpdateDialogFragment dialog, NumberPicker numChapter, NumberPicker numVolume, Spinner spinnerStatus, RatingBar barScore) {
+        Integer chapter = numChapter.getValue();
+        Integer volume = numVolume.getValue();
+        String status = spinnerStatus.getSelectedItem().toString();
+        Float score = barScore.getRating()*2;
+
 		Log.i(TAG,
-				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ch: %d  Vol: %d", dialog.getMangaID(),
-						dialog.getStatus(), dialog.getScore(), dialog.getChapter(), dialog.getVolume()));
+				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ch: %d  Vol: %d", dialog.getID(),
+                        status, score, chapter, volume));
 
 		final String updatePath = "/update_manga.php";
 		ExecuteHtmlTaskQueue execQueue = new ExecuteHtmlTaskQueue(this, new Runnable() {
@@ -389,21 +404,21 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		RequestParams params;
 
 		NameValuePair[] pairs = new BasicNameValuePair[4];
-		pairs[0] = new BasicNameValuePair("manga_id", dialog.getMangaID().toString());
+		pairs[0] = new BasicNameValuePair("manga_id", dialog.getID().toString());
 		pairs[1] = new BasicNameValuePair("dur", "");
 
-		if (dialog.chapterNeedsUpdate()) {
+		if (dialog.numLeftNeedsUpdate()) {
 			// Update Chapter
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getChapter().toString());
+			pairs[2] = new BasicNameValuePair("updateVar", chapter.toString());
 			pairs[3] = new BasicNameValuePair("utype", "chap_read");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
 			execQueue.add(new Task(params, null));
 		}
 
-		if (dialog.volumeNeedsUpdate()) {
+		if (dialog.numRightNeedsUpdate()) {
 			// Update Chapter
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getVolume().toString());
+			pairs[2] = new BasicNameValuePair("updateVar", volume.toString());
 			pairs[3] = new BasicNameValuePair("utype", "vol_read");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
@@ -412,7 +427,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		if (dialog.scoreNeedsUpdate()) {
 			// Update Score
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
+			pairs[2] = new BasicNameValuePair("updateVar", score.toString());
 			pairs[3] = new BasicNameValuePair("utype", "score");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
@@ -421,7 +436,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		if (dialog.statusNeedsUpdate()) {
 			// Update Status
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus().toLowerCase());
+			pairs[2] = new BasicNameValuePair("updateVar", status.toLowerCase());
 			pairs[3] = new BasicNameValuePair("utype", "status");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
@@ -432,11 +447,14 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		execQueue.execute();
 	}
 
-	@Override
-	public void onUpdateAnimeDialogPositiveClick(UpdateAnimeDialogFragment dialog) {
-		Log.i(TAG,
-				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ep: %d", dialog.getAnimeID(),
-						dialog.getStatus(), dialog.getScore(), dialog.getEpisode()));
+	public void onUpdateAnimeDialogPositiveClick(UpdateDialogFragment dialog, NumberPicker numEpisode, Spinner spinnerStatus, RatingBar barScore) {
+        Integer episode = numEpisode.getValue();
+        String status = spinnerStatus.getSelectedItem().toString();
+        Float score = barScore.getRating()*2;
+
+        Log.i(TAG,
+				String.format("Updating - ID: %d  Stat: %s  Scr: %1.2f  Ep: %d", dialog.getID(),
+                        status, score, episode));
 
 		final String updatePath = "/update_anime.php";
 		ExecuteHtmlTaskQueue execQueue = new ExecuteHtmlTaskQueue(this, new Runnable() {
@@ -450,12 +468,12 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 		RequestParams params;
 
 		NameValuePair[] pairs = new BasicNameValuePair[4];
-		pairs[0] = new BasicNameValuePair("anime_id", dialog.getAnimeID().toString());
+		pairs[0] = new BasicNameValuePair("anime_id", dialog.getID().toString());
 		pairs[1] = new BasicNameValuePair("dur", "24");
 
-		if (dialog.progressNeedsUpdate()) {
+		if (dialog.numLeftNeedsUpdate()) {
 			// Update Episode
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getEpisode().toString());
+			pairs[2] = new BasicNameValuePair("updateVar", episode.toString());
 			pairs[3] = new BasicNameValuePair("utype", "ep_watched");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
@@ -464,7 +482,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		if (dialog.scoreNeedsUpdate()) {
 			// Update Score
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getScore().toString());
+			pairs[2] = new BasicNameValuePair("updateVar", score.toString());
 			pairs[3] = new BasicNameValuePair("utype", "score");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));
@@ -473,7 +491,7 @@ public class MainActivity extends ActionBarActivity implements LoginDialogListen
 
 		if (dialog.statusNeedsUpdate()) {
 			// Update Status
-			pairs[2] = new BasicNameValuePair("updateVar", dialog.getStatus().toLowerCase());
+			pairs[2] = new BasicNameValuePair("updateVar", status.toLowerCase());
 			pairs[3] = new BasicNameValuePair("utype", "status");
 			params = new RequestParams(getString(R.string.baseURL).concat(updatePath), true, Arrays.asList(pairs
 					.clone()));

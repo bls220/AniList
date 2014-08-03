@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.ExpandableListView;
 
 import com.bls220.anilist.MainActivity;
+import com.bls220.anilist.R;
+import com.bls220.anilist.UpdateDialogFragment;
 import com.bls220.anilist.anilist.AniEntry;
 import com.bls220.anilist.anilist.AniExpandChild;
 import com.bls220.anilist.anilist.AniListFragment;
@@ -30,13 +32,7 @@ public class AnimeListFragment extends AniListFragment {
 				entry.getTitle(), entry.getID(), entry.getProgressString(), entry.getScore(), entry.getStatus()));
 
 		// Show update Dialog
-		UpdateAnimeDialogFragment dialog = new UpdateAnimeDialogFragment();
-		// get episode info from child
-		dialog.setMaxEpisodes(entry.getMax());
-		dialog.setEpisode(entry.getCurrent());
-		dialog.setAnimeID(entry.getID());
-		dialog.setScore(entry.getScore());
-		dialog.setStatus(entry.getStatus());
+		UpdateDialogFragment dialog = UpdateDialogFragment.newInstance(UpdateDialogFragment.EUpdateType.ANIME,R.array.status_array_anime,entry.getStatus(),entry.getScore(),entry.getCurrent(),entry.getMax(),-1,-1,entry.getID());
 		dialog.show(getFragmentManager(), "update");
 		return true;
 	}

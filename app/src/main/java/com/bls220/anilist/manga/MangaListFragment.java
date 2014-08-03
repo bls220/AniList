@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.ExpandableListView;
 
 import com.bls220.anilist.MainActivity;
+import com.bls220.anilist.R;
+import com.bls220.anilist.UpdateDialogFragment;
 import com.bls220.anilist.anilist.AniEntry;
 import com.bls220.anilist.anilist.AniExpandChild;
 import com.bls220.anilist.anilist.AniListFragment;
@@ -31,14 +33,7 @@ public class MangaListFragment extends AniListFragment {
 				entry.getTitle(), entry.getID(), entry.getProgressString(), entry.getScore(), entry.getStatus()));
 
 		// Show update Dialog
-		UpdateMangaDialogFragment dialog = new UpdateMangaDialogFragment();
-		// get info from child
-		dialog.setMangaID(entry.getID());
-		dialog.setScore(entry.getScore());
-		dialog.setStatus(entry.getStatus());
-		dialog.setChapter(entry.getChapter());
-		dialog.setVolume(entry.getCurrent());
-		dialog.setMaxVolumes(entry.getMax());
+		UpdateDialogFragment dialog = UpdateDialogFragment.newInstance(UpdateDialogFragment.EUpdateType.MANGA, R.array.status_array_manga,entry.getStatus(),entry.getScore(),entry.getChapter(),entry.getChapterMax(),entry.getCurrent(),entry.getMax(),entry.getID());
 		dialog.show(getFragmentManager(), "update");
 		return true;
 	}

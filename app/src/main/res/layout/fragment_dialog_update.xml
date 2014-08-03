@@ -16,26 +16,26 @@
         android:gravity="center" >
 
         <TextView
-            android:id="@+id/txtTitle"
+            android:id="@+id/tvNumLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="Chapter:" />
 
         <NumberPicker
-            android:id="@+id/chapterNumberPicker"
+            android:id="@+id/NumberPickerLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <TextView
-            android:id="@+id/TextView01"
+            android:id="@+id/tvNumRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="Volume:" />
 
         <NumberPicker
-            android:id="@+id/volumeNumberPicker"
+            android:id="@+id/NumberPickerRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
@@ -50,14 +50,14 @@
         android:gravity="center" >
 
         <TextView
-            android:id="@+id/txtDescription"
+            android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="Status:" />
 
         <Spinner
-            android:id="@+id/spinner1"
+            android:id="@+id/spinnerStatus"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -65,7 +65,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/tvScore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/linearLayout2"
@@ -76,7 +76,7 @@
         android:id="@+id/scoreRatingBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView3"
+        android:layout_below="@+id/tvScore"
         android:layout_centerHorizontal="true"
         android:isIndicator="false"
         android:max="10"
