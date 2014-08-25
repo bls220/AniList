@@ -54,8 +54,8 @@ public class AniListParser {
 				if (progress[0].isEmpty()) {
 					progress[0] = "-1";
 				}
-				Integer curEp = progress.length > 1 ? Integer.parseInt(progress[0]) : -1;
-				Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : Integer.parseInt(progress[0]);
+				Integer curEp = Integer.parseInt(progress[0]);
+                Integer totEp = progress.length > 1 ? Integer.parseInt(progress[1]) : -1;
 
 				Integer animeID = Integer.parseInt(id);
 				anilist.addToGroup(title, new AniEntry(String.format("%s", name, id),

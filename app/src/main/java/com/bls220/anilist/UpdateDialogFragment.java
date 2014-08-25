@@ -108,10 +108,10 @@ public class UpdateDialogFragment extends DialogFragment {
 
 		// Setup UI
 		numLeft = (NumberPicker) view.findViewById(R.id.NumberPickerLeft);
-        if( numLeftMax >= 0) {
+        if( numLeftVal >= 0) {
             numLeft.setMinValue(0);
-            numLeft.setMaxValue(numLeftMax);
-            final Integer numLeftStartVal = numLeftVal;
+            numLeft.setMaxValue(numLeftMax >= 0 ? numLeftMax : Integer.MAX_VALUE-1);
+            final Integer numLeftStartVal =  numLeftVal >= 0 ? numLeftVal : 0;
             numLeft.setValue(numLeftStartVal);
             numLeft.setOnValueChangedListener(new OnValueChangeListener() {
                 @Override
@@ -129,10 +129,10 @@ public class UpdateDialogFragment extends DialogFragment {
         }
 
 		numRight = (NumberPicker) view.findViewById(R.id.NumberPickerRight);
-        if( numRightMax >=0 ) {
+        if( numRightVal >=0 ) {
             numRight.setMinValue(0);
-            numRight.setMaxValue(numRightMax);
-            final Integer numRightStartVal = numRightVal;
+            numRight.setMaxValue(numRightMax >= 0 ? numRightMax : Integer.MAX_VALUE-1);
+            final Integer numRightStartVal = numRightVal >= 0 ? numRightVal : 0;
             numRight.setValue(numRightStartVal);
             numRight.setOnValueChangedListener(new OnValueChangeListener() {
                 @Override

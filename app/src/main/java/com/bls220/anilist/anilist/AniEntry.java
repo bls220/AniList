@@ -31,12 +31,12 @@ public class AniEntry {
     // Common Constructor - For Convenience
 	public AniEntry(String title, Integer id, String score, Integer current, Integer max,
 			CharSequence status) {
-		this(title, id, score, current, max, status, 0, 0);
+		this(title, id, score, current, max, status, -1, -1);
 	}
 
 	// Minimal Common Constructor
 	public AniEntry(String title, Integer id) {
-		this(title, id, "-", 0, 0, "Watching");
+		this(title, id, "-", -1, -1, "Watching");
 	}
 
 	public Integer getID() {
